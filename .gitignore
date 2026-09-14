@@ -13,3 +13,11 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+
+# Ignorar TODA la carpeta .idea (más simple y seguro)
+.idea/
+
+# Build de módulos (por si acaso, además de /build)
+/app/build
+/*/build

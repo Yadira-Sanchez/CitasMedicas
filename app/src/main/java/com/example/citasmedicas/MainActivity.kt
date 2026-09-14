@@ -4,14 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.*
 import com.example.citasmedicas.ui.theme.CitasMedicasTheme
+import com.example.citasmedicas.ui.auth.PantallaLogin
+import com.example.citasmedicas.ui.auth.PantallaRegistro
+import com.example.citasmedicas.ui.dashboard.PantallaInicio
+import com.example.citasmedicas.ui.medicamentos.PantallaNuevoMedicamento
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +17,28 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CitasMedicasTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                // Controlamos qué pantalla se ve con esta variable
+                var pantallaActual by remember { mutableStateOf("Login") }
+
+                when (pantallaActual) {
+                    "Login" -> PantallaLogin(
+                        alEntrar = { pantallaActual = "Inicio" },
+                        irARegistro = { pantallaActual = "Registro" }
+                    )
+                    "Registro" -> PantallaRegistro(
+                        alRegistrar = { pantallaActual = "Inicio" },
+                        irALogin = { pantallaActual = "Login" }
+                    )
+                    "Inicio" -> PantallaInicio(
+                        alAgregarMedicamento = { pantallaActual = "NuevoMedicamento" },
+                        alCerrarSesion = { pantallaActual = "Login" }
+                    )
+                    "NuevoMedicamento" -> PantallaNuevoMedicamento(
+                        alGuardar = { pantallaActual = "Inicio" },
+                        alVolver = { pantallaActual = "Inicio" }
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    CitasMedicasTheme {
-        Greeting("Android")
     }
 }
