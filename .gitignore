@@ -14,9 +14,22 @@
 .cxx
 local.properties
 
+# Firebase & Archivos Sensibles / Configuración Local
+app/google-services.json
+*.keystore
+
+
+# Android Studio y Gradle
+.gradle/
+build/
+app/build/
+.idea/
+
+# Archivos del Sistema Operativo
+
+Thumbs.db
 
 # Ignorar TODA la carpeta .idea (más simple y seguro)
-.idea/
 
 # Build de módulos (por si acaso, además de /build)
 /app/build

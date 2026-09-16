@@ -18,3 +18,14 @@ data class Medicamento(
     val fechaFin: String = "", // Es opcional
     val yaFueTomado: Boolean = false // Para saber si ya se tomó la medicina hoy
 )
+
+// Datos de la cita médica para la agenda y dashboard
+data class CitaMedica(
+    val id: String = "",
+    val doctor: String,
+    val especialidad: String,
+    val fecha: String, // Formato YYYY-MM-DD o similar
+    val hora: String,
+    val ubicacion: String,
+    val estado: String = "Pendiente" // Pendiente, Confirmada, etc.
+)

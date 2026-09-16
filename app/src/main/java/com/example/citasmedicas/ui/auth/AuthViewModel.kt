@@ -9,11 +9,13 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.firestore.FirebaseFirestore
 
 // Este es el "cerebro" que maneja la entrada y salida de usuarios
 class AuthViewModel : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
     // Estados de la pantalla
     var cargando by mutableStateOf(false)
@@ -41,10 +43,29 @@ class AuthViewModel : ViewModel() {
 
         auth.createUserWithEmailAndPassword(correo, clave)
             .addOnCompleteListener { tarea ->
-                cargando = false
                 if (tarea.isSuccessful) {
-                    registroExitoso = true
+                    val uid = auth.currentUser?.uid
+                    if (uid != null) {
+                        val datosUsuario = mapOf(
+                            "nombre" to nombre.trim(),
+                            "correo" to correo.trim()
+                        )
+                        firestore.collection("usuarios").document(uid)
+                            .set(datosUsuario)
+                            .addOnCompleteListener { tareaFirestore ->
+                                cargando = false
+                                if (tareaFirestore.isSuccessful) {
+                                    registroExitoso = true
+                                } else {
+                                    mensajeError = "Se creó la cuenta, pero hubo un error al guardar los datos de perfil."
+                                }
+                            }
+                    } else {
+                        cargando = false
+                        registroExitoso = true
+                    }
                 } else {
+                    cargando = false
                     val excepcion = tarea.exception
                     mensajeError = when (excepcion) {
                         is FirebaseAuthUserCollisionException -> "Este correo ya está registrado."

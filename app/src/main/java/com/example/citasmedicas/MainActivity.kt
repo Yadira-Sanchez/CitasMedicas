@@ -1,5 +1,4 @@
 package com.example.citasmedicas
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,6 +9,7 @@ import com.example.citasmedicas.ui.auth.PantallaLogin
 import com.example.citasmedicas.ui.auth.PantallaRegistro
 import com.example.citasmedicas.ui.dashboard.PantallaInicio
 import com.example.citasmedicas.ui.medicamentos.PantallaNuevoMedicamento
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,8 +17,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CitasMedicasTheme {
-                // Controlamos qué pantalla se ve con esta variable
-                var pantallaActual by remember { mutableStateOf("Login") }
+                // Controlamos qué pantalla se ve con esta variable, verificando sesión activa según AGENTS.md
+                var pantallaActual by remember { 
+                    mutableStateOf(
+                        if (FirebaseAuth.getInstance().currentUser != null) "Inicio" else "Login"
+                    ) 
+                }
 
                 when (pantallaActual) {
                     "Login" -> PantallaLogin(

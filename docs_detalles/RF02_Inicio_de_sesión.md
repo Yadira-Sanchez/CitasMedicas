@@ -1,88 +1,45 @@
-# RF02 - Inicio de sesión
+# Spec Técnico: RF02 - Inicio de Sesión
 
-## Historia de usuario
-Como usuario quiero iniciar sesión con mi correo y contraseña para acceder de forma segura a mis medicamentos, citas y recordatorios.
+## 1. Información General
+- **Código y Nombre:** RF02 - Inicio de sesión
+- **Módulo:** Módulo 1 - Autenticación y Gestión de Usuarios
+- **Objetivo:** Permitir a un usuario registrado ingresar a la aplicación autenticándose con su correo electrónico y contraseña.
 
-## Objetivo
-Permitir que un usuario registrado valide sus credenciales mediante Firebase Authentication e ingrese a la pantalla principal de la aplicación.
+## 2. Historia de Usuario
+**Como** usuario registrado  
+**Quiero** ingresar mis credenciales de acceso  
+**Para** acceder a mis medicamentos, citas y configuraciones guardadas.
 
-## Alcance
+## 3. Alcance y Límites
+- **Incluye:**
+    - Formulario en Jetpack Compose con campos: Correo electrónico y Contraseña.
+    - Validación local de formato de correo y campos no vacíos.
+    - Control de visibilidad para el campo de contraseña (icono de ojo).
+    - Autenticación remota con Firebase Authentication.
+    - Navegación hacia la pantalla principal (`PantallaInicio`) tras el ingreso exitoso.
+    - Opción/enlace visible para navegar hacia el registro (`RF01`) o recuperar contraseña (`RF03`).
+- **No incluye:**
+    - Login biométrico (huella/rostro) ni inicio de sesión con redes sociales.
 
-### Incluye:
-- Mostrar una pantalla de Inicio de Sesión en Jetpack Compose.
-- Solicitar el correo electrónico del usuario.
-- Solicitar la contraseña del usuario.
-- Validar los campos localmente antes de enviar.
-- Autenticar las credenciales con Firebase Authentication.
-- Manejar estados de interfaz (Carga, Error, Éxito).
-- Mantener la sesión activa para futuros ingresos.
-- Navegar a la pantalla principal (Dashboard) al completar la autenticación.
-- Incluir un acceso visual/botón hacia la pantalla de Registro (RF01) y Olvidé contraseña (RF03).
-- Inicio de sesión con Google
+## 4. Especificación de UI y Formulario
 
-### No incluye (Versión Académica V1):
-- Inicio de sesión con biometría (huella/rostro).
-- Inicio de sesión con redes sociales.
-- Autenticación en dos pasos (2FA).
-
----
-
-## Campos del Formulario
-
-| Campo | Obligatorio | Reglas de Validación | Icono / Acción Especial | Mensaje de Error |
+| Campo | Obligatorio | Reglas de Validación | Componente Visual | Mensaje de Error |
 | :--- | :---: | :--- | :--- | :--- |
-| **Correo electrónico** | Sí | Formato válido (`usuario@dominio.com`), sin espacios | Ninguno | `"Escribe un correo electrónico válido."` |
-| **Contraseña** | Sí | No vacía, mínimo 6 caracteres | **Icono de ojo (TrailingIcon):** Permite alternar la visibilidad del texto | `"Escribe tu contraseña."` |
+| **Correo electrónico** | Sí | `.trim()`, formato válido (`usuario@dominio.com`) | `OutlinedTextField` | `"Escribe un correo electrónico válido."` |
+| **Contraseña** | Sí | `.trim()`, campo no vacío | `OutlinedTextField` + TrailingIcon | `"Ingresa tu contraseña."` |
 
----
+## 5. Comportamiento y Estados de Pantalla
+- **Estado Inicial:** Campos vacíos y botón "Iniciar Sesión" habilitado.
+- **Estado de Carga:** Muestra `CircularProgressIndicator` y desactiva el botón para evitar múltiples envíos.
+- **Estado de Error:** Muestra mensaje de credenciales incorrectas en un `Snackbar` o texto de error debajo del formulario si Firebase rechaza la autenticación.
+- **Estado de Éxito:** Notifica ingreso correcto y redirige a `PantallaInicio`.
 
-## Reglas de Interfaz (Visibilidad de Contraseña)
+## 6. Arquitectura (MVVM + Firebase)
+- **Vista (UI):** `PantallaLogin.kt` (Ubicación: `ui.auth`)
+- **ViewModel:** `AuthViewModel.kt`
+- **Servicio:** `FirebaseAuth.getInstance().signInWithEmailAndPassword()`
 
-### Icono de Mostrar / Ocultar Contraseña (Ojito)
-- Usar `IconButton` dentro del parámetro `trailingIcon` del `OutlinedTextField` de Material 3.
-- Utilizar un estado local booleano en Compose (`isPasswordVisible`) para controlar la visibilidad.
-- **Estado Oculto (por defecto):** Visualización mediante `PasswordVisualTransformation()` e icono `Icons.Filled.VisibilityOff`.
-- **Estado Visible:** Visualización mediante `VisualTransformation.None` e icono `Icons.Filled.Visibility`.
-
----
-
-## Reglas de Validación Detalladas
-
-### Correo electrónico
-- Es obligatorio.
-- Debe aplicar `.trim()` antes de validar o enviar.
-- No puede contener espacios en blanco.
-- Debe validar la estructura estándar de correo (`usuario@dominio.com`).
-
-### Contraseña
-- Es obligatoria.
-- Debe aplicar `.trim()` antes de validar.
-- Debe tener **mínimo 6 caracteres**.
-- Debe mantenerse oculta por defecto en la UI.
-
----
-
-## Comportamiento de la Pantalla y Estados de UI
-
-Cuando el usuario presiona el botón **Iniciar Sesión**:
-
-1. **Validación Local:** El ViewModel procesa los datos aplicándoles `.trim()`. Si algún campo está vacío o es inválido, muestra el error en la UI y **NO** llama a Firebase.
-2. **Estado de Carga:** Si todo es válido, se activa el indicador de carga (`CircularProgressIndicator`), se deshabilita el botón y se evita el envío repetido de peticiones.
-3. **Llamada a Firebase:** Se invoca el método `signInWithEmailAndPassword` mediante el ViewModel.
-4. **Estado de Éxito:** Se redirige inmediatamente al usuario a la Pantalla Principal (Dashboard) y se limpia la pila de navegación para evitar regresar al Login con el botón de atrás.
-5. **Estado de Error:** Si Firebase invalida las credenciales o hay problemas de red, se muestra un mensaje claro en pantalla.
-
----
-
-## Mapeo de Errores de Firebase
-
-Convertir las excepciones técnicas de Firebase Authentication a mensajes amigables:
-
-| Excepción / Situación Firebase | Mensaje a Mostrar en Pantalla |
-| :--- | :--- |
-| `FirebaseAuthInvalidCredentialsException` | `"Correo o contraseña incorrectos."` |
-| `FirebaseAuthInvalidUserException` | `"No existe una cuenta registrada con este correo."` |
-| Error de Red / Conexión | `"No se pudo conectar. Revisa tu conexión a internet."` |
-| Error Indefinido / Desconocido | `"Error al iniciar sesión. Inténtalo nuevamente."` |
-
----
+## 7. Criterios de Aceptación (Pruebas Manuales)
+- [ ] **Inicio Exitoso:** Ingresar correo y contraseña válidos y verificar la navegación a la pantalla principal.
+- [ ] **Credenciales Erróneas:** Probar con una contraseña incorrecta y verificar que se muestre el mensaje de error sin cerrar la app.
+- [ ] **Campos Vacíos:** Intentar presionar el botón sin llenar datos y comprobar la validación local.
