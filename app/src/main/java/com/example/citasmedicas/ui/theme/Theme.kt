@@ -23,7 +23,7 @@ fun CitasMedicasTheme(
 ) {
     MaterialTheme(
         colorScheme = EsquemaDeColores,
-        typography = Typography,
+        typography = Typography, // <-- ESTA LÍNEA ES LA QUE APLICA TU TIPOGRAFÍA GLOBAL
         content = content
     )
 }

@@ -11,6 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,7 +36,6 @@ fun PantallaNuevoMedicamento(
     var mostrarCalendarioInicio by remember { mutableStateOf(false) }
     var mostrarCalendarioFin by remember { mutableStateOf(false) }
 
-    // Si se guarda bien, volvemos al inicio
     LaunchedEffect(modelo.guardadoExitoso) {
         if (modelo.guardadoExitoso) {
             alGuardar()
@@ -45,7 +46,7 @@ fun PantallaNuevoMedicamento(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nuevo Medicamento", color = AzulPrimario, fontWeight = FontWeight.Bold) },
+                title = { Text("Nuevo Medicamento", color = AzulPrimario, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default) },
                 navigationIcon = {
                     IconButton(onClick = alVolver) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -59,152 +60,159 @@ fun PantallaNuevoMedicamento(
                 .padding(padding)
                 .padding(16.dp)
                 .fillMaxSize()
-                .verticalScroll(estadoScroll)
+                .verticalScroll(estadoScroll),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Nombre del Medicamento
-            Text("Nombre del Medicamento", fontWeight = FontWeight.Bold)
-            OutlinedTextField(
-                value = modelo.nombre,
-                onValueChange = { modelo.nombre = it },
-                placeholder = { Text("Ej. Ibuprofeno") },
+            
+            // Tarjeta 1: Información Base (Nombre, Selección de Tipo y Dosis)
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // Selección de Tipo (Chips) - RF05
-            Text("Tipo", fontWeight = FontWeight.Bold)
-            val tipos = listOf("Pastilla", "Jarabe", "Inyección", "Gotas")
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                tipos.forEach { tipo ->
-                    FilterChip(
-                        selected = modelo.tipoSeleccionado == tipo,
-                        onClick = { modelo.tipoSeleccionado = tipo },
-                        label = { Text(tipo) }
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                    val (ejemploNombre, ejemploDosis, unidad) = when (modelo.tipoSeleccionado) {
+                        "Jarabe" -> Triple("Ej. Jarabe para la tos", "Ej. 10 ml o 1 cucharada", "ml")
+                        "Inyección" -> Triple("Ej. Penicilina", "Ej. 1 ampolla", "ampolla(s)")
+                        "Gotas" -> Triple("Ej. Gotas oftálmicas", "Ej. 2 gotas", "gotas")
+                        else -> Triple("Ej. Ibuprofeno", "Ej. 1 tableta o 500 mg", "pastilla(s)") // Pastilla por defecto
+                    }
+
+                    Text("Nombre del Medicamento", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                    OutlinedTextField(
+                        value = modelo.nombre,
+                        onValueChange = { modelo.nombre = it },
+                        placeholder = { Text("Ej. Ibuprofeno", fontFamily = FontFamily.Default) },
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
+                    )
+
+                    Text("Tipo", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                    val tipos = listOf("Pastilla", "Jarabe", "Inyección", "Gotas")
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        tipos.forEach { tipo ->
+                            FilterChip(
+                                selected = modelo.tipoSeleccionado == tipo,
+                                onClick = { modelo.tipoSeleccionado = tipo },
+                                label = { Text(tipo, fontFamily = FontFamily.Default) }
+                            )
+                        }
+                    }
+
+                    Text("Dosis / Cantidad", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                    OutlinedTextField(
+                        value = modelo.dosis,
+                        onValueChange = { modelo.dosis = it },
+                        placeholder = { Text(modelo.sugerenciaDosis, fontFamily = FontFamily.Default) },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-
-            // Dosis con Placeholder Dinámico - RF05
-            Text("Dosis / Cantidad", fontWeight = FontWeight.Bold)
-            OutlinedTextField(
-                value = modelo.dosis,
-                onValueChange = { modelo.dosis = it },
-                placeholder = { Text(modelo.sugerenciaDosis) },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // Frecuencia (Menú desplegable simple)
-            Text("Frecuencia", fontWeight = FontWeight.Bold)
-            var expandido by remember { mutableStateOf(false) }
-            val opciones = listOf("Cada 4 horas", "Cada 6 horas", "Cada 8 horas", "Cada 12 horas", "Una vez al día", "Personalizar")
-            
-            ExposedDropdownMenuBox(
-                expanded = expandido,
-                onExpandedChange = { expandido = !expandido }
+            // Tarjeta 2: Programación (Frecuencia, Hora de toma y Fechas)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                OutlinedTextField(
-                    value = modelo.frecuencia,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor(),
-                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                )
-                ExposedDropdownMenu(
-                    expanded = expandido,
-                    onDismissRequest = { expandido = false }
-                ) {
-                    opciones.forEach { opcion ->
-                        DropdownMenuItem(
-                            text = { Text(opcion) },
-                            onClick = {
-                                modelo.frecuencia = opcion
-                                expandido = false
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Frecuencia", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                    var expandido by remember { mutableStateOf(false) }
+                    val opciones = listOf("Cada 4 horas", "Cada 6 horas", "Cada 8 horas", "Cada 12 horas", "Una vez al día", "Personalizar")
+                    
+                    ExposedDropdownMenuBox(
+                        expanded = expandido,
+                        onExpandedChange = { expandido = !expandido }
+                    ) {
+                        OutlinedTextField(
+                            value = modelo.frecuencia,
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
+                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandido,
+                            onDismissRequest = { expandido = false }
+                        ) {
+                            opciones.forEach { opcion ->
+                                DropdownMenuItem(
+                                    text = { Text(opcion, fontFamily = FontFamily.Default) },
+                                    onClick = {
+                                        modelo.frecuencia = opcion
+                                        expandido = false
+                                    }
+                                )
                             }
+                        }
+                    }
+
+                    if (modelo.frecuencia == "Personalizar") {
+                        OutlinedTextField(
+                            value = modelo.intervaloPersonalizado,
+                            onValueChange = { modelo.intervaloPersonalizado = it },
+                            label = { Text("¿Cada cuántas horas?", fontFamily = FontFamily.Default) },
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                }
-            }
 
-            // Si es personalizado, mostrar campo extra
-            if (modelo.frecuencia == "Personalizar") {
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = modelo.intervaloPersonalizado,
-                    onValueChange = { modelo.intervaloPersonalizado = it },
-                    label = { Text("¿Cada cuántas horas?") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+                    Text("Primera toma", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                    OutlinedTextField(
+                        value = modelo.horaToma,
+                        onValueChange = {},
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = { Icon(Icons.Default.Notifications, null) },
+                        trailingIcon = {
+                            IconButton(onClick = { mostrarReloj = true }) {
+                                Icon(Icons.Default.DateRange, null)
+                            }
+                        }
+                    )
 
-            Spacer(Modifier.height(16.dp))
-
-            // Primera toma (TimePicker)
-            Text("Primera toma", fontWeight = FontWeight.Bold)
-            OutlinedTextField(
-                value = modelo.horaToma,
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth(),
-                leadingIcon = { Icon(Icons.Default.Notifications, null) },
-                trailingIcon = {
-                    IconButton(onClick = { mostrarReloj = true }) {
-                        Icon(Icons.Default.DateRange, null)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Fecha de inicio", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                            OutlinedTextField(
+                                value = modelo.fechaInicio,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = {
+                                    IconButton(onClick = { mostrarCalendarioInicio = true }) {
+                                        Icon(Icons.Default.DateRange, null)
+                                    }
+                                }
+                            )
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text("Fecha de fin", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                            OutlinedTextField(
+                                value = modelo.fechaFin,
+                                onValueChange = {},
+                                readOnly = true,
+                                placeholder = { Text("Opcional", fontFamily = FontFamily.Default) },
+                                trailingIcon = {
+                                    IconButton(onClick = { mostrarCalendarioFin = true }) {
+                                        Icon(Icons.Default.DateRange, null)
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
-            )
+            }
+
+            modelo.mensajeError?.let {
+                Text(it, color = MaterialTheme.colorScheme.error, fontFamily = FontFamily.Default)
+            }
 
             Spacer(Modifier.height(16.dp))
 
-            // Fechas Inicio y Fin (DatePicker)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Column(Modifier.weight(1f)) {
-                    Text("Fecha de inicio", fontWeight = FontWeight.Bold)
-                    OutlinedTextField(
-                        value = modelo.fechaInicio,
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = {
-                            IconButton(onClick = { mostrarCalendarioInicio = true }) {
-                                Icon(Icons.Default.DateRange, null)
-                            }
-                        }
-                    )
-                }
-                Column(Modifier.weight(1f)) {
-                    Text("Fecha de fin", fontWeight = FontWeight.Bold)
-                    OutlinedTextField(
-                        value = modelo.fechaFin,
-                        onValueChange = {},
-                        readOnly = true,
-                        placeholder = { Text("Opcional") },
-                        trailingIcon = {
-                            IconButton(onClick = { mostrarCalendarioFin = true }) {
-                                Icon(Icons.Default.DateRange, null)
-                            }
-                        }
-                    )
-                }
-            }
-
-            // Mostrar mensaje de error si existe
-            modelo.mensajeError?.let {
-                Spacer(Modifier.height(8.dp))
-                Text(it, color = MaterialTheme.colorScheme.error)
-            }
-
-            Spacer(Modifier.height(32.dp))
-
-            // Botón Guardar
             Button(
                 onClick = { modelo.guardarMedicamento() },
                 modifier = Modifier
@@ -215,14 +223,11 @@ fun PantallaNuevoMedicamento(
             ) {
                 Icon(Icons.Default.Check, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Guardar Medicamento y Programar Alerta", fontSize = 14.sp)
+                Text("Guardar Medicamento y Programar Alerta", fontSize = 14.sp, fontFamily = FontFamily.Default)
             }
         }
     }
 
-    // --- Diálogos de Selección (Popups) ---
-
-    // Reloj para la hora
     if (mostrarReloj) {
         val estadoReloj = rememberTimePickerState(initialHour = 8, initialMinute = 0)
         TimePickerDialog(
@@ -236,7 +241,6 @@ fun PantallaNuevoMedicamento(
         }
     }
 
-    // Calendario para Fecha Inicio
     if (mostrarCalendarioInicio) {
         val estadoFecha = rememberDatePickerState()
         DatePickerDialog(
@@ -248,14 +252,13 @@ fun PantallaNuevoMedicamento(
                         modelo.fechaInicio = fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                     }
                     mostrarCalendarioInicio = false
-                }) { Text("OK") }
+                }) { Text("OK", fontFamily = FontFamily.Default) }
             }
         ) {
             DatePicker(state = estadoFecha)
         }
     }
 
-    // Calendario para Fecha Fin
     if (mostrarCalendarioFin) {
         val estadoFecha = rememberDatePickerState()
         DatePickerDialog(
@@ -267,7 +270,7 @@ fun PantallaNuevoMedicamento(
                         modelo.fechaFin = fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                     }
                     mostrarCalendarioFin = false
-                }) { Text("OK") }
+                }) { Text("OK", fontFamily = FontFamily.Default) }
             }
         ) {
             DatePicker(state = estadoFecha)
@@ -275,7 +278,6 @@ fun PantallaNuevoMedicamento(
     }
 }
 
-// Componente auxiliar para el diálogo de hora (que no viene por defecto en M3)
 @Composable
 fun TimePickerDialog(
     alCerrar: () -> Unit,
@@ -285,10 +287,10 @@ fun TimePickerDialog(
     AlertDialog(
         onDismissRequest = alCerrar,
         confirmButton = {
-            TextButton(onClick = alConfirmar) { Text("Confirmar") }
+            TextButton(onClick = alConfirmar) { Text("Confirmar", fontFamily = FontFamily.Default) }
         },
         dismissButton = {
-            TextButton(onClick = alCerrar) { Text("Cancelar") }
+            TextButton(onClick = alCerrar) { Text("Cancelar", fontFamily = FontFamily.Default) }
         },
         text = { contenido() }
     )

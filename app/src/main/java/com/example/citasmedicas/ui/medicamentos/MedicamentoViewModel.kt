@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -23,6 +25,9 @@ class MedicamentoViewModel : ViewModel() {
     var mensajeError by mutableStateOf<String?>(null)
     var guardadoExitoso by mutableStateOf(false)
 
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+
     // Lógica de Placeholder Dinámico (RF05)
     val sugerenciaDosis: String
         get() = when (tipoSeleccionado) {
@@ -35,11 +40,11 @@ class MedicamentoViewModel : ViewModel() {
 
     fun guardarMedicamento() {
         if (nombre.trim().length < 2) {
-            mensajeError = "Escribe el nombre del medicamento."
+            mensajeError = "Ingresa el nombre del medicamento."
             return
         }
         if (dosis.trim().isEmpty()) {
-            mensajeError = "Escribe la dosis o cantidad."
+            mensajeError = "Especifica la dosis."
             return
         }
         if (frecuencia == "Personalizar" && intervaloPersonalizado.trim().isEmpty()) {
@@ -47,10 +52,43 @@ class MedicamentoViewModel : ViewModel() {
             return
         }
 
-        // Aquí iría la lógica para guardar en Base de Datos o Firebase
-        // Por ahora simulamos éxito
-        guardadoExitoso = true
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            mensajeError = "No se pudo identificar al usuario activo. Inicie sesión de nuevo."
+            return
+        }
+
         mensajeError = null
+
+        val frecuenciaFinal = if (frecuencia == "Personalizar") {
+            "Cada ${intervaloPersonalizado.trim()} horas"
+        } else {
+            frecuencia
+        }
+
+        // Datos requeridos según el Spec de RF05
+        val nuevoMedicamento = mapOf(
+            "nombre" to nombre.trim(),
+            "tipo" to tipoSeleccionado,
+            "dosis" to dosis.trim(),
+            "frecuencia" to frecuenciaFinal,
+            "horaToma" to horaToma,
+            "fechaInicio" to fechaInicio,
+            "fechaFin" to fechaFin.trim(),
+            "yaFueTomado" to false
+        )
+
+        firestore.collection("usuarios")
+            .document(uid)
+            .collection("medicamentos")
+            .add(nuevoMedicamento)
+            .addOnCompleteListener { tarea ->
+                if (tarea.isSuccessful) {
+                    guardadoExitoso = true
+                } else {
+                    mensajeError = "No se pudo guardar el medicamento. Revisa tu conexión a internet."
+                }
+            }
     }
 
     fun limpiarFormulario() {

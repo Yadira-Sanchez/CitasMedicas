@@ -53,6 +53,17 @@ persona que está aprendiendo a programar.
 - Mantener compatibilidad con modo calro y oscuro.
 - Agregar accesibilidad cuando sea necesario.
 
+
+# Guía de Estilo y Reglas Generales de UI/UX 
+
+## 1. Tipografía y Textos
+- **Fuente Obligatoria:** Usar estrictamente la tipografía predeterminada del sistema (`FontFamily.Default` / Sans-Serif).
+- **Prohibiciones:** Queda estrictamente prohibido el uso de fuentes cursivas, manuscritas o decorativas en toda la aplicación (formularios, títulos, botones y listas).
+
+## 2. Componentes y Layout
+- **Botón Flotante (FAB):** Debe ubicarse siempre en la esquina inferior derecha ('exepto el boton de chatbot, ese se mantiene en la esquina inferior izquierda') (`Alignment.BottomEnd`) con margen de `16.dp` respecto a los bordes.
+- **Estructura de Formularios:** Agrupar campos relacionados dentro de tarjetas (`Card` elevadas) con `padding` interno uniforme (16.dp) para evitar listas verticales infinitas y desordenadas.
+- **Navegación Inferior:** La `NavigationBar` debe usarse únicamente para cambiar entre las secciones principales, no para abrir formularios de creación directamente.
 ## Forma de trabajar
 
 Antes de programar:

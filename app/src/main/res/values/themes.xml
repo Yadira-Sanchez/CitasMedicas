@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.CitasMedicas" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.CitasMedicas" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Fuerza la tipografía limpia nativa de Android a nivel de tema -->
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
 </resources>

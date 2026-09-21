@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.firestore.FirebaseFirestore
 
+
 // Este es el "cerebro" que maneja la entrada y salida de usuarios
 class AuthViewModel : ViewModel() {
 
