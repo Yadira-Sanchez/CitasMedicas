@@ -7,7 +7,7 @@ data class Usuario(
     val contrasena: String
 )
 
-// Datos de la medicina que queremos guardar
+
 data class Medicamento(
     val nombre: String,
     val tipo: String, // Ejemplo: Pastilla, Jarabe...

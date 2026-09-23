@@ -16,11 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citasmedicas.data.Medicamento
 import com.example.citasmedicas.ui.dashboard.DashboardViewModel
@@ -53,9 +50,7 @@ fun PantallaMedicamentos(
                     ) {
                         Text(
                             "Añadir una medicina",
-                            fontSize = 18.sp,
-                            fontFamily = FontFamily.Default,
-                            fontWeight = FontWeight.Medium
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
                 }
@@ -67,25 +62,25 @@ fun PantallaMedicamentos(
                 ) {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                        label = { Text("Inicio", fontFamily = FontFamily.Default) },
+                        label = { Text("Inicio") },
                         selected = false,
                         onClick = { alNavegarA("inicio") }
                     )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Medication, contentDescription = "Medicinas") },
-                        label = { Text("Medicinas", fontFamily = FontFamily.Default) },
+                        label = { Text("Medicinas") },
                         selected = true,
                         onClick = { /* Ya estamos aquí */ }
                     )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.CalendarMonth, contentDescription = "Citas") },
-                        label = { Text("Citas", fontFamily = FontFamily.Default) },
+                        label = { Text("Citas") },
                         selected = false,
                         onClick = { alNavegarA("citas") }
                     )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-                        label = { Text("Perfil", fontFamily = FontFamily.Default) },
+                        label = { Text("Perfil") },
                         selected = false,
                         onClick = { alNavegarA("perfil") }
                     )
@@ -105,7 +100,6 @@ fun PantallaMedicamentos(
                 text = "Medicamentos activos",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Default,
                 modifier = Modifier.padding(bottom = 16.dp, start = 8.dp)
             )
 
@@ -116,7 +110,6 @@ fun PantallaMedicamentos(
                 ) {
                     Text(
                         "No tienes medicamentos registrados.",
-                        fontFamily = FontFamily.Default,
                         color = Color.Gray
                     )
                 }
@@ -169,14 +162,12 @@ fun ElementoMedicamentoMedisafe(medicamento: Medicamento) {
             Text(
                 text = medicamento.nombre,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Default
+                fontWeight = FontWeight.Bold
             )
             Text(
                 text = "Próximo recordatorio: hoy, ${medicamento.horaToma}",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
-                fontFamily = FontFamily.Default
+                color = Color.Gray
             )
         }
     }

@@ -20,14 +20,19 @@ class AuthViewModel : ViewModel() {
 
     // Estados de la pantalla
     var cargando by mutableStateOf(false)
+
     var mensajeError by mutableStateOf<String?>(null)
     var registroExitoso by mutableStateOf(false)
     var loginExitoso by mutableStateOf(false)
 
-    // Función para crear una cuenta nueva (RF01)
+
     fun registrarUsuario(nombre: String, correo: String, clave: String) {
         if (nombre.trim().isEmpty()) {
             mensajeError = "Escribe tu nombre."
+            return
+        }
+        if (nombre.length < 3) {
+            mensajeError = "El nombre debe tener al menos 3 caracteres."
             return
         }
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
@@ -112,3 +117,10 @@ class AuthViewModel : ViewModel() {
         mensajeError = null
     }
 }
+
+
+
+
+/*git add .
+git commit -m "Soluciones de errores y agregar pantalla de medicamentos"
+git push origin main*/

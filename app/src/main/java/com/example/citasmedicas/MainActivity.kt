@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             CitasMedicasTheme {
                 val auth = FirebaseAuth.getInstance()
 
-                // 1. Estado para saber si el usuario de Firebase cambia en tiempo real
+
                 var usuarioFirebase by remember { mutableStateOf(auth.currentUser) }
 
                 DisposableEffect(auth) {
@@ -32,10 +32,10 @@ class MainActivity : ComponentActivity() {
                     onDispose { auth.removeAuthStateListener(listener) }
                 }
 
-                // 2. Control de pantallas internas
+
                 var pantallaActual by remember { mutableStateOf("Inicio") }
 
-                // 3. Si no hay usuario en Firebase, FORZAMOS a que muestre Login siempre
+
                 if (usuarioFirebase == null) {
                     when (pantallaActual) {
                         "Registro" -> PantallaRegistro(

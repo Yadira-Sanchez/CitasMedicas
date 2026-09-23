@@ -14,10 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citasmedicas.data.CitaMedica
 import com.example.citasmedicas.data.Medicamento
@@ -44,14 +42,12 @@ fun PantallaInicio(
     // Cada vez que cambie el usuario (o al entrar a la pantalla), recargamos la información
     LaunchedEffect(userId) {
         if (userId != null) {
-            viewModel.cargarDatos() // Asegúrate de llamar tu función de carga del ViewModel aquí
+            viewModel.cargarDatos()
         }
     }
 
     var medicamentoSeleccionado by remember { mutableStateOf<Medicamento?>(null) }
-
     var mostrarBottomSheet by remember { mutableStateOf(false) }
-
     val estadoSheet = rememberModalBottomSheetState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -62,25 +58,26 @@ fun PantallaInicio(
                         selected = true,
                         onClick = { },
                         icon = { Icon(Icons.Default.Home, null) },
-                        label = { Text("Inicio", fontFamily = FontFamily.Default) }
+                        label = { Text("Inicio") }
                     )
+
                     NavigationBarItem(
                         selected = false,
                         onClick = alVerMedicamentos,
                         icon = { Icon(Icons.Default.Medication, null) },
-                        label = { Text("Medicinas", fontFamily = FontFamily.Default) }
+                        label = { Text("Medicinas") }
                     )
                     NavigationBarItem(
                         selected = false,
                         onClick = { /* RF12: Navegar a Citas */ },
                         icon = { Icon(Icons.Default.Event, null) },
-                        label = { Text("Citas", fontFamily = FontFamily.Default) }
+                        label = { Text("Citas") }
                     )
                     NavigationBarItem(
                         selected = false,
                         onClick = alCerrarSesion,
                         icon = { Icon(Icons.Default.Person, null) },
-                        label = { Text("Perfil", fontFamily = FontFamily.Default) }
+                        label = { Text("Perfil") }
                     )
                 }
             }
@@ -101,8 +98,17 @@ fun PantallaInicio(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Hola,", fontSize = 16.sp, color = Color.Gray, fontFamily = FontFamily.Default)
-                            Text(uiState.nombreUsuario, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = AzulPrimario, fontFamily = FontFamily.Default)
+                            Text(
+                                "Hola,",
+                                color = Color.Gray,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                uiState.nombreUsuario,
+                                color = AzulPrimario,
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         Surface(
                             shape = CircleShape,
@@ -114,12 +120,11 @@ fun PantallaInicio(
                     }
                 }
 
-                // Buscador
                 item {
                     OutlinedTextField(
                         value = "",
                         onValueChange = { },
-                        placeholder = { Text("Buscar medicamentos o citas...", fontFamily = FontFamily.Default) },
+                        placeholder = { Text("Buscar medicamentos o citas...") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(28.dp),
                         leadingIcon = { Icon(Icons.Default.Search, null) }
@@ -134,11 +139,14 @@ fun PantallaInicio(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Calendario", fontWeight = FontWeight.Bold, fontSize = 18.sp, fontFamily = FontFamily.Default)
+                            Text(
+                                "Calendario",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
                             Text(
                                 "Ver todo",
                                 color = AzulPrimario,
-                                fontFamily = FontFamily.Default,
                                 modifier = Modifier.clickable { /* RF12 */ }
                             )
                         }
@@ -155,14 +163,21 @@ fun PantallaInicio(
                     }
                 }
 
-                // Tomas de Hoy
                 item {
-                    Text("Tomas de Hoy", fontWeight = FontWeight.Bold, fontSize = 18.sp, fontFamily = FontFamily.Default)
+                    Text(
+                        "Tomas de Hoy",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 if (uiState.listaMedicamentos.isEmpty()) {
                     item {
-                        Text("No tienes medicamentos programados para hoy.", color = Color.Gray, fontFamily = FontFamily.Default)
+                        Text(
+                            "No tienes medicamentos programados para hoy.",
+                            color = Color.Gray,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 } else {
                     items(uiState.listaMedicamentos) { med ->
@@ -188,8 +203,16 @@ fun PantallaInicio(
                                 )
                                 Spacer(Modifier.width(16.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(med.nombre, fontWeight = FontWeight.Bold, fontSize = 16.sp, fontFamily = FontFamily.Default)
-                                    Text("${med.dosis} • ${med.horaToma}", color = Color.Gray, fontSize = 14.sp, fontFamily = FontFamily.Default)
+                                    Text(
+                                        med.nombre,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "${med.dosis} • ${med.horaToma}",
+                                        color = Color.Gray,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
                                 }
                                 if (med.yaFueTomado) {
                                     Icon(Icons.Default.CheckCircle, contentDescription = "Tomado", tint = VerdeClaro)
@@ -199,9 +222,12 @@ fun PantallaInicio(
                     }
                 }
 
-                // Próxima Cita
                 item {
-                    Text("Próxima Cita", fontWeight = FontWeight.Bold, fontSize = 18.sp, fontFamily = FontFamily.Default)
+                    Text(
+                        "Próxima Cita",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 val cita = uiState.proximaCita
@@ -211,7 +237,11 @@ fun PantallaInicio(
                     }
                 } else {
                     item {
-                        Text("No tienes citas próximas.", color = Color.Gray, fontFamily = FontFamily.Default)
+                        Text(
+                            "No tienes citas próximas.",
+                            color = Color.Gray,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
 
@@ -262,15 +292,13 @@ fun PantallaInicio(
             ) {
                 Text(
                     text = med.nombre,
-                    fontSize = 20.sp,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Default,
                     color = AzulPrimario
                 )
                 Text(
                     text = "¿Qué acción deseas realizar para esta toma (${med.horaToma})?",
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.Default,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )
 
@@ -284,7 +312,7 @@ fun PantallaInicio(
                     colors = ButtonDefaults.buttonColors(containerColor = VerdeClaro),
                     modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
-                    Text("Tomar", fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold)
+                    Text("Tomar", fontWeight = FontWeight.Bold)
                 }
 
                 Button(
@@ -295,7 +323,7 @@ fun PantallaInicio(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
                     modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
-                    Text("Pasar", fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold)
+                    Text("Pasar", fontWeight = FontWeight.Bold)
                 }
 
                 OutlinedButton(
@@ -306,7 +334,7 @@ fun PantallaInicio(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AzulPrimario),
                     modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
-                    Text("Reprogramar", fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold)
+                    Text("Reprogramar", fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -335,15 +363,13 @@ fun DiaItem(fecha: LocalDate, estaSeleccionado: Boolean, alSeleccionar: () -> Un
         ) {
             Text(
                 diaNombre.uppercase(localeEs),
-                fontSize = 12.sp,
-                fontFamily = FontFamily.Default,
+                style = MaterialTheme.typography.labelMedium,
                 color = if (estaSeleccionado) Color.White else Color.Gray
             )
             Text(
                 diaNumero,
-                fontSize = 18.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Default,
                 color = if (estaSeleccionado) Color.White else Color.Black
             )
         }
@@ -354,28 +380,42 @@ fun DiaItem(fecha: LocalDate, estaSeleccionado: Boolean, alSeleccionar: () -> Un
 fun TarjetaCita(cita: CitaMedica) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = AzulPrimario),
+        colors = CardDefaults.cardColors(containerColor = AzulPrimario, contentColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(cita.doctor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp, fontFamily = FontFamily.Default)
-                    Text(cita.especialidad, color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp, fontFamily = FontFamily.Default)
+                    Text(
+                        cita.doctor,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        cita.especialidad,
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
-                Icon(Icons.Default.Event, contentDescription = null, tint = Color.White)
+                Icon(Icons.Default.Event, contentDescription = null)
             }
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Schedule, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("${cita.fecha} • ${cita.hora}", color = Color.White, fontSize = 14.sp, fontFamily = FontFamily.Default)
+                Text(
+                    "${cita.fecha} • ${cita.hora}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(cita.ubicacion, color = Color.White, fontSize = 14.sp, fontFamily = FontFamily.Default)
+                Text(
+                    cita.ubicacion,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -385,14 +425,14 @@ fun TarjetaCita(cita: CitaMedica) {
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Reprogramar", fontFamily = FontFamily.Default)
+                    Text("Reprogramar")
                 }
                 Button(
                     onClick = { },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = AzulPrimario),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Confirmar", fontFamily = FontFamily.Default)
+                    Text("Confirmar")
                 }
             }
         }
