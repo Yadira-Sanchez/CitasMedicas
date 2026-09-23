@@ -44,9 +44,11 @@ fun PantallaLogin(
     // Si el login es exitoso, avisamos para cambiar de pantalla
     LaunchedEffect(modelo.loginExitoso) {
         if (modelo.loginExitoso) {
+            modelo.reiniciarLoginExitoso()
             alEntrar()
         }
     }
+
 
     Box(
         modifier = Modifier

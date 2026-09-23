@@ -26,6 +26,24 @@ class AuthViewModel : ViewModel() {
     var loginExitoso by mutableStateOf(false)
 
 
+    fun reiniciarLoginExitoso() {
+        loginExitoso = false
+    }
+
+    fun reiniciarRegistroExitoso() {
+        registroExitoso = false
+    }
+
+    fun limpiarEstadoAuth() {
+        cargando = false
+        mensajeError = null
+        loginExitoso = false
+        registroExitoso = false
+    }
+
+
+
+
     fun registrarUsuario(nombre: String, correo: String, clave: String) {
         if (nombre.trim().isEmpty()) {
             mensajeError = "Escribe tu nombre."

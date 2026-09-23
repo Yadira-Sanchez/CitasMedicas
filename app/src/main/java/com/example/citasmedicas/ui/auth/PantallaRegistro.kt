@@ -42,16 +42,17 @@ fun PantallaRegistro(
     var claveVisible by remember { mutableStateOf(false) }
 
     // Estados visuales adicionales de la interfaz solicitada sin alterar la lógica
-    var confirmarClave by remember { mutableStateOf("") }
-    var confirmarClaveVisible by remember { mutableStateOf(false) }
+
     var aceptoTerminos by remember { mutableStateOf(true) }
 
     // Si se registra bien, vamos a la pantalla principal o login
     LaunchedEffect(modelo.registroExitoso) {
         if (modelo.registroExitoso) {
+            modelo.reiniciarRegistroExitoso()
             alRegistrar()
         }
     }
+
 
     Box(
         modifier = Modifier
