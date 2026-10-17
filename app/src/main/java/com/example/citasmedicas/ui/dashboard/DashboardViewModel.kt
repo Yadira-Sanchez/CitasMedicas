@@ -76,7 +76,17 @@ class DashboardViewModel : ViewModel() {
                             val fechaInicio = doc.getString("fechaInicio") ?: ""
                             val fechaFin = doc.getString("fechaFin") ?: ""
                             val yaFueTomado = doc.getBoolean("yaFueTomado") ?: false
-                            Medicamento(nombre, tipo, dosis, frecuencia, horaToma, fechaInicio, fechaFin, yaFueTomado)
+                            Medicamento(
+                                id = doc.id,
+                                nombre = nombre,
+                                tipo = tipo,
+                                dosis = dosis,
+                                frecuencia = frecuencia,
+                                horaToma = horaToma,
+                                fechaInicio = fechaInicio,
+                                fechaFin = fechaFin,
+                                yaFueTomado = yaFueTomado
+                            )
                         }
                         uiState = uiState.copy(listaMedicamentos = medicamentos)
                     }

@@ -1,5 +1,6 @@
 package com.example.citasmedicas.ui.medicamentos
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,13 +24,19 @@ import com.example.citasmedicas.data.Medicamento
 import com.example.citasmedicas.ui.dashboard.DashboardViewModel
 import com.example.citasmedicas.ui.theme.AzulPrimario
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMedicamentos(
     alAnadirMedicina: () -> Unit,
     alNavegarA: (String) -> Unit,
-    viewModel: DashboardViewModel = viewModel()
+    dashboardViewModel: DashboardViewModel = viewModel(),
+    medicamentoViewModel: MedicamentoViewModel = viewModel()
 ) {
-    val uiState = viewModel.uiState
+    val uiState = dashboardViewModel.uiState
+    val medSeleccionado = medicamentoViewModel.medicamentoSeleccionado
+
+    // Estado para el panel inferior de detalles (RF14)
+    val sheetState = rememberModalBottomSheetState()
 
     Scaffold(
         bottomBar = {
@@ -119,7 +126,10 @@ fun PantallaMedicamentos(
                     verticalArrangement = Arrangement.Top
                 ) {
                     items(uiState.listaMedicamentos) { medicamento ->
-                        ElementoMedicamentoMedisafe(medicamento)
+                        ElementoMedicamentoMedisafe(
+                            medicamento = medicamento,
+                            onClick = { medicamentoViewModel.seleccionarMedicamento(medicamento) }
+                        )
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 8.dp),
                             thickness = 0.5.dp,
@@ -129,14 +139,33 @@ fun PantallaMedicamentos(
                 }
             }
         }
+
+        // Panel inferior de detalles (RF14)
+        if (medSeleccionado != null) {
+            ModalBottomSheet(
+                onDismissRequest = { medicamentoViewModel.cerrarDetalle() },
+                sheetState = sheetState,
+                containerColor = Color.White,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                ContenidoDetalleMedicamento(
+                    medicamento = medSeleccionado,
+                    alCerrar = { medicamentoViewModel.cerrarDetalle() }
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun ElementoMedicamentoMedisafe(medicamento: Medicamento) {
+fun ElementoMedicamentoMedisafe(
+    medicamento: Medicamento,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() } // Hace que toda la fila sea interactiva
             .padding(vertical = 16.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.citasmedicas.data.Medicamento
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDate
@@ -11,7 +12,7 @@ import java.time.format.DateTimeFormatter
 
 class MedicamentoViewModel : ViewModel() {
 
-    // Campos del formulario
+    // Campos del formulario (RF05)
     var nombre by mutableStateOf("")
     var tipoSeleccionado by mutableStateOf("Pastilla")
     var dosis by mutableStateOf("")
@@ -20,6 +21,10 @@ class MedicamentoViewModel : ViewModel() {
     var horaToma by mutableStateOf("08:00")
     var fechaInicio by mutableStateOf(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
     var fechaFin by mutableStateOf("")
+
+    // Estado para la consulta de detalles (RF14)
+    var medicamentoSeleccionado by mutableStateOf<Medicamento?>(null)
+        private set
 
     // Estados de UI
     var mensajeError by mutableStateOf<String?>(null)
@@ -37,6 +42,14 @@ class MedicamentoViewModel : ViewModel() {
             "Gotas" -> "Ej. 5 gotas"
             else -> "Escribe la dosis"
         }
+
+    fun seleccionarMedicamento(medicamento: Medicamento) {
+        medicamentoSeleccionado = medicamento
+    }
+
+    fun cerrarDetalle() {
+        medicamentoSeleccionado = null
+    }
 
     fun guardarMedicamento() {
         if (nombre.trim().length < 2) {
@@ -66,7 +79,6 @@ class MedicamentoViewModel : ViewModel() {
             frecuencia
         }
 
-        // Datos requeridos según el Spec de RF05
         val nuevoMedicamento = mapOf(
             "nombre" to nombre.trim(),
             "tipo" to tipoSeleccionado,
