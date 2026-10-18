@@ -6,14 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Medication
-import androidx.compose.material.icons.filled.Opacity
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Vaccines
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,70 +23,101 @@ import com.example.citasmedicas.ui.theme.AzulPrimario
 @Composable
 fun PantallaMedicamentos(
     alAnadirMedicina: () -> Unit,
+    alVerDetalle: (String) -> Unit,
     alNavegarA: (String) -> Unit,
     dashboardViewModel: DashboardViewModel = viewModel(),
     medicamentoViewModel: MedicamentoViewModel = viewModel()
 ) {
     val uiState = dashboardViewModel.uiState
-    val medSeleccionado = medicamentoViewModel.medicamentoSeleccionado
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Estado para el panel inferior de detalles (RF14)
-    val sheetState = rememberModalBottomSheetState()
+    LaunchedEffect(medicamentoViewModel.eliminacionExitosa) {
+        if (medicamentoViewModel.eliminacionExitosa) {
+            snackbarHostState.showSnackbar("Medicamento eliminado correctamente.")
+        }
+    }
+
+    LaunchedEffect(medicamentoViewModel.mensajeError) {
+        medicamentoViewModel.mensajeError?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
 
     Scaffold(
+        snackbarHost = { 
+            SnackbarHost(hostState = snackbarHostState) 
+        },
         bottomBar = {
-            Column {
-                // Botón de Acción Principal (Estilo Medisafe)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp)
-                ) {
-                    Button(
-                        onClick = alAnadirMedicina,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AzulPrimario)
-                    ) {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp
+            ) {
+                NavigationBarItem(
+                    icon = { 
+                        Icon(
+                            imageVector = Icons.Default.Home, 
+                            contentDescription = "Inicio"
+                        ) 
+                    },
+                    label = { 
                         Text(
-                            "Añadir una medicina",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                            text = "Inicio"
+                        ) 
+                    },
+                    selected = false,
+                    onClick = { 
+                        alNavegarA("inicio") 
                     }
-                }
-
-                // Barra de Navegación Inferior
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 8.dp
-                ) {
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                        label = { Text("Inicio") },
-                        selected = false,
-                        onClick = { alNavegarA("inicio") }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Medication, contentDescription = "Medicinas") },
-                        label = { Text("Medicinas") },
-                        selected = true,
-                        onClick = { /* Ya estamos aquí */ }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.CalendarMonth, contentDescription = "Citas") },
-                        label = { Text("Citas") },
-                        selected = false,
-                        onClick = { alNavegarA("citas") }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-                        label = { Text("Perfil") },
-                        selected = false,
-                        onClick = { alNavegarA("perfil") }
-                    )
-                }
+                )
+                NavigationBarItem(
+                    icon = { 
+                        Icon(
+                            imageVector = Icons.Default.Medication, 
+                            contentDescription = "Medicinas"
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            text = "Medicinas"
+                        ) 
+                    },
+                    selected = true,
+                    onClick = { }
+                )
+                NavigationBarItem(
+                    icon = { 
+                        Icon(
+                            imageVector = Icons.Default.Event, 
+                            contentDescription = "Citas"
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            text = "Citas"
+                        ) 
+                    },
+                    selected = false,
+                    onClick = { 
+                        alNavegarA("citas") 
+                    }
+                )
+                NavigationBarItem(
+                    icon = { 
+                        Icon(
+                            imageVector = Icons.Default.Person, 
+                            contentDescription = "Perfil"
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            text = "Perfil"
+                        ) 
+                    },
+                    selected = false,
+                    onClick = { 
+                        alNavegarA("perfil") 
+                    }
+                )
             }
         }
     ) { padding ->
@@ -101,8 +127,10 @@ fun PantallaMedicamentos(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            // Encabezado Sutil
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+            
             Text(
                 text = "Medicamentos activos",
                 style = MaterialTheme.typography.titleMedium,
@@ -112,23 +140,25 @@ fun PantallaMedicamentos(
 
             if (uiState.listaMedicamentos.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(), 
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "No tienes medicamentos registrados.",
+                        text = "No tienes medicamentos registrados.", 
                         color = Color.Gray
                     )
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(), 
                     verticalArrangement = Arrangement.Top
                 ) {
                     items(uiState.listaMedicamentos) { medicamento ->
-                        ElementoMedicamentoMedisafe(
+                        ElementoMedicamentoItem(
                             medicamento = medicamento,
-                            onClick = { medicamentoViewModel.seleccionarMedicamento(medicamento) }
+                            onClick = { 
+                                alVerDetalle(medicamento.id) 
+                            }
                         )
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 8.dp),
@@ -139,37 +169,21 @@ fun PantallaMedicamentos(
                 }
             }
         }
-
-        // Panel inferior de detalles (RF14)
-        if (medSeleccionado != null) {
-            ModalBottomSheet(
-                onDismissRequest = { medicamentoViewModel.cerrarDetalle() },
-                sheetState = sheetState,
-                containerColor = Color.White,
-                dragHandle = { BottomSheetDefaults.DragHandle() }
-            ) {
-                ContenidoDetalleMedicamento(
-                    medicamento = medSeleccionado,
-                    alCerrar = { medicamentoViewModel.cerrarDetalle() }
-                )
-            }
-        }
     }
 }
 
 @Composable
-fun ElementoMedicamentoMedisafe(
-    medicamento: Medicamento,
+fun ElementoMedicamentoItem(
+    medicamento: Medicamento, 
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() } // Hace que toda la fila sea interactiva
+            .clickable { onClick() }
             .padding(vertical = 16.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icono representativo
         val icono = when (medicamento.tipo) {
             "Pastilla" -> Icons.Default.Medication
             "Jarabe", "Gotas" -> Icons.Default.Opacity
@@ -178,24 +192,25 @@ fun ElementoMedicamentoMedisafe(
         }
 
         Icon(
-            imageVector = icono,
-            contentDescription = null,
-            tint = AzulPrimario,
+            imageVector = icono, 
+            contentDescription = null, 
+            tint = AzulPrimario, 
             modifier = Modifier.size(32.dp)
         )
-
-        Spacer(modifier = Modifier.width(20.dp))
-
-        // Textos centralizados
-        Column(modifier = Modifier.weight(1f)) {
+        Spacer(
+            modifier = Modifier.width(20.dp)
+        )
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
             Text(
-                text = medicamento.nombre,
-                style = MaterialTheme.typography.titleMedium,
+                text = medicamento.nombre, 
+                style = MaterialTheme.typography.titleMedium, 
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Próximo recordatorio: hoy, ${medicamento.horaToma}",
-                style = MaterialTheme.typography.bodySmall,
+                text = "Próximo recordatorio: hoy, ${medicamento.horaToma}", 
+                style = MaterialTheme.typography.bodySmall, 
                 color = Color.Gray
             )
         }

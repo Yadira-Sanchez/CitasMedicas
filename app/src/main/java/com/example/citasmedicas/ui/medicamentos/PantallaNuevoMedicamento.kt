@@ -20,7 +20,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citasmedicas.ui.theme.AzulPrimario
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -32,10 +31,12 @@ fun PantallaNuevoMedicamento(
     modelo: MedicamentoViewModel = viewModel()
 ) {
     val estadoScroll = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
     var mostrarReloj by remember { mutableStateOf(false) }
     var mostrarCalendarioInicio by remember { mutableStateOf(false) }
     var mostrarCalendarioFin by remember { mutableStateOf(false) }
 
+    // 3. Optimización de Cierre al Guardar: Navegación inmediata
     LaunchedEffect(modelo.guardadoExitoso) {
         if (modelo.guardadoExitoso) {
             alGuardar()
@@ -44,12 +45,29 @@ fun PantallaNuevoMedicamento(
     }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState
+            )
+        },
         topBar = {
             TopAppBar(
-                title = { Text("Nuevo Medicamento", color = AzulPrimario, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default) },
+                title = {
+                    Text(
+                        text = "Nuevo Medicamento",
+                        color = AzulPrimario,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Default
+                    )
+                },
                 navigationIcon = {
-                    IconButton(onClick = alVolver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    IconButton(
+                        onClick = alVolver
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver"
+                        )
                     }
                 }
             )
@@ -64,63 +82,144 @@ fun PantallaNuevoMedicamento(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             
-            // Tarjeta 1: Información Base (Nombre, Selección de Tipo y Dosis)
+            // Tarjeta 1: Información Base
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 2.dp
+                )
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
-                    val (ejemploNombre, ejemploDosis, unidad) = when (modelo.tipoSeleccionado) {
-                        "Jarabe" -> Triple("Ej. Jarabe para la tos", "Ej. 10 ml o 1 cucharada", "ml")
-                        "Inyección" -> Triple("Ej. Penicilina", "Ej. 1 ampolla", "ampolla(s)")
-                        "Gotas" -> Triple("Ej. Gotas oftálmicas", "Ej. 2 gotas", "gotas")
-                        else -> Triple("Ej. Ibuprofeno", "Ej. 1 tableta o 500 mg", "pastilla(s)") // Pastilla por defecto
-                    }
-
-                    Text("Nombre del Medicamento", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Nombre del Medicamento",
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Default
+                    )
                     OutlinedTextField(
                         value = modelo.nombre,
                         onValueChange = { modelo.nombre = it },
-                        placeholder = { Text("Ej. Ibuprofeno", fontFamily = FontFamily.Default) },
+                        placeholder = {
+                            Text(
+                                text = "Ej. Ibuprofeno",
+                                fontFamily = FontFamily.Default
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null
+                            )
+                        }
                     )
 
-                    Text("Tipo", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                    Text(
+                        text = "Tipo",
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Default
+                    )
                     val tipos = listOf("Pastilla", "Jarabe", "Inyección", "Gotas")
                     Row(
-                        Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         tipos.forEach { tipo ->
                             FilterChip(
                                 selected = modelo.tipoSeleccionado == tipo,
                                 onClick = { modelo.tipoSeleccionado = tipo },
-                                label = { Text(tipo, fontFamily = FontFamily.Default) }
+                                label = {
+                                    Text(
+                                        text = tipo,
+                                        fontFamily = FontFamily.Default
+                                    )
+                                }
                             )
                         }
                     }
 
-                    Text("Dosis / Cantidad", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                    Text(
+                        text = "Dosis / Cantidad",
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Default
+                    )
                     OutlinedTextField(
                         value = modelo.dosis,
                         onValueChange = { modelo.dosis = it },
-                        placeholder = { Text(modelo.sugerenciaDosis, fontFamily = FontFamily.Default) },
+                        placeholder = {
+                            Text(
+                                text = modelo.sugerenciaDosis,
+                                fontFamily = FontFamily.Default
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
 
-            // Tarjeta 2: Programación (Frecuencia, Hora de toma y Fechas)
+            // Tarjeta 2: Programación
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 2.dp
+                )
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Frecuencia", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    
+                    // 4. Diseño del Interruptor con contraste estético limpio
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Activar recordatorios",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Default
+                            )
+                            Text(
+                                text = "Recibir notificaciones en este dispositivo",
+                                fontSize = 12.sp,
+                                color = Color.Gray,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+                        Switch(
+                            checked = modelo.recordatorioActivo,
+                            onCheckedChange = { modelo.recordatorioActivo = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = AzulPrimario,
+                                checkedTrackColor = AzulPrimario.copy(alpha = 0.3f),
+                                uncheckedThumbColor = Color.Gray,
+                                uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 0.5.dp
+                    )
+
+                    Text(
+                        text = "Frecuencia",
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Default
+                    )
                     var expandido by remember { mutableStateOf(false) }
                     val opciones = listOf("Cada 4 horas", "Cada 6 horas", "Cada 8 horas", "Cada 12 horas", "Una vez al día", "Personalizar")
                     
@@ -132,8 +231,14 @@ fun PantallaNuevoMedicamento(
                             value = modelo.frecuencia,
                             onValueChange = {},
                             readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandido) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = expandido
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
                             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                         )
                         ExposedDropdownMenu(
@@ -142,7 +247,12 @@ fun PantallaNuevoMedicamento(
                         ) {
                             opciones.forEach { opcion ->
                                 DropdownMenuItem(
-                                    text = { Text(opcion, fontFamily = FontFamily.Default) },
+                                    text = {
+                                        Text(
+                                            text = opcion,
+                                            fontFamily = FontFamily.Default
+                                        )
+                                    },
                                     onClick = {
                                         modelo.frecuencia = opcion
                                         expandido = false
@@ -156,49 +266,98 @@ fun PantallaNuevoMedicamento(
                         OutlinedTextField(
                             value = modelo.intervaloPersonalizado,
                             onValueChange = { modelo.intervaloPersonalizado = it },
-                            label = { Text("¿Cada cuántas horas?", fontFamily = FontFamily.Default) },
+                            label = {
+                                Text(
+                                    text = "¿Cada cuántas horas?",
+                                    fontFamily = FontFamily.Default
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
 
-                    Text("Primera toma", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                    Text(
+                        text = "Primera toma",
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Default
+                    )
                     OutlinedTextField(
                         value = modelo.horaToma,
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = { Icon(Icons.Default.Notifications, null) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = null
+                            )
+                        },
                         trailingIcon = {
-                            IconButton(onClick = { mostrarReloj = true }) {
-                                Icon(Icons.Default.DateRange, null)
+                            IconButton(
+                                onClick = { mostrarReloj = true }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = null
+                                )
                             }
                         }
                     )
 
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Fecha de inicio", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Fecha de inicio",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Default
+                            )
                             OutlinedTextField(
                                 value = modelo.fechaInicio,
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = {
-                                    IconButton(onClick = { mostrarCalendarioInicio = true }) {
-                                        Icon(Icons.Default.DateRange, null)
+                                    IconButton(
+                                        onClick = { mostrarCalendarioInicio = true }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.DateRange,
+                                            contentDescription = null
+                                        )
                                     }
                                 }
                             )
                         }
-                        Column(Modifier.weight(1f)) {
-                            Text("Fecha de fin", fontWeight = FontWeight.Bold, fontFamily = FontFamily.Default)
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Fecha de fin",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Default
+                            )
                             OutlinedTextField(
                                 value = modelo.fechaFin,
                                 onValueChange = {},
                                 readOnly = true,
-                                placeholder = { Text("Opcional", fontFamily = FontFamily.Default) },
+                                placeholder = {
+                                    Text(
+                                        text = "Opcional",
+                                        fontFamily = FontFamily.Default
+                                    )
+                                },
                                 trailingIcon = {
-                                    IconButton(onClick = { mostrarCalendarioFin = true }) {
-                                        Icon(Icons.Default.DateRange, null)
+                                    IconButton(
+                                        onClick = { mostrarCalendarioFin = true }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.DateRange,
+                                            contentDescription = null
+                                        )
                                     }
                                 }
                             )
@@ -208,22 +367,47 @@ fun PantallaNuevoMedicamento(
             }
 
             modelo.mensajeError?.let {
-                Text(it, color = MaterialTheme.colorScheme.error, fontFamily = FontFamily.Default)
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    fontFamily = FontFamily.Default
+                )
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
 
             Button(
                 onClick = { modelo.guardarMedicamento() },
+                enabled = !modelo.cargando,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AzulPrimario)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AzulPrimario
+                )
             ) {
-                Icon(Icons.Default.Check, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Guardar Medicamento y Programar Alerta", fontSize = 14.sp, fontFamily = FontFamily.Default)
+                if (modelo.cargando) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null
+                    )
+                    Spacer(
+                        modifier = Modifier.width(8.dp)
+                    )
+                    Text(
+                        text = "Guardar Medicamento",
+                        fontSize = 16.sp,
+                        fontFamily = FontFamily.Default
+                    )
+                }
             }
         }
     }
@@ -237,7 +421,9 @@ fun PantallaNuevoMedicamento(
                 mostrarReloj = false
             }
         ) {
-            TimePicker(state = estadoReloj)
+            TimePicker(
+                state = estadoReloj
+            )
         }
     }
 
@@ -246,16 +432,25 @@ fun PantallaNuevoMedicamento(
         DatePickerDialog(
             onDismissRequest = { mostrarCalendarioInicio = false },
             confirmButton = {
-                TextButton(onClick = {
-                    estadoFecha.selectedDateMillis?.let {
-                        val fecha = Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
-                        modelo.fechaInicio = fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                TextButton(
+                    onClick = {
+                        estadoFecha.selectedDateMillis?.let {
+                            val fecha = Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
+                            modelo.fechaInicio = fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                        }
+                        mostrarCalendarioInicio = false
                     }
-                    mostrarCalendarioInicio = false
-                }) { Text("OK", fontFamily = FontFamily.Default) }
+                ) {
+                    Text(
+                        text = "OK",
+                        fontFamily = FontFamily.Default
+                    )
+                }
             }
         ) {
-            DatePicker(state = estadoFecha)
+            DatePicker(
+                state = estadoFecha
+            )
         }
     }
 
@@ -264,16 +459,25 @@ fun PantallaNuevoMedicamento(
         DatePickerDialog(
             onDismissRequest = { mostrarCalendarioFin = false },
             confirmButton = {
-                TextButton(onClick = {
-                    estadoFecha.selectedDateMillis?.let {
-                        val fecha = Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
-                        modelo.fechaFin = fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                TextButton(
+                    onClick = {
+                        estadoFecha.selectedDateMillis?.let {
+                            val fecha = Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
+                            modelo.fechaFin = fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                        }
+                        mostrarCalendarioFin = false
                     }
-                    mostrarCalendarioFin = false
-                }) { Text("OK", fontFamily = FontFamily.Default) }
+                ) {
+                    Text(
+                        text = "OK",
+                        fontFamily = FontFamily.Default
+                    )
+                }
             }
         ) {
-            DatePicker(state = estadoFecha)
+            DatePicker(
+                state = estadoFecha
+            )
         }
     }
 }
@@ -287,11 +491,27 @@ fun TimePickerDialog(
     AlertDialog(
         onDismissRequest = alCerrar,
         confirmButton = {
-            TextButton(onClick = alConfirmar) { Text("Confirmar", fontFamily = FontFamily.Default) }
+            TextButton(
+                onClick = alConfirmar
+            ) {
+                Text(
+                    text = "Confirmar",
+                    fontFamily = FontFamily.Default
+                )
+            }
         },
         dismissButton = {
-            TextButton(onClick = alCerrar) { Text("Cancelar", fontFamily = FontFamily.Default) }
+            TextButton(
+                onClick = alCerrar
+            ) {
+                Text(
+                    text = "Cancelar",
+                    fontFamily = FontFamily.Default
+                )
+            }
         },
-        text = { contenido() }
+        text = {
+            contenido()
+        }
     )
 }

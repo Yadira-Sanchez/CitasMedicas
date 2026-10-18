@@ -8,126 +8,174 @@ import com.example.citasmedicas.data.CitaMedica
 import com.example.citasmedicas.data.Medicamento
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class DashboardUiState(
     val nombreUsuario: String = "Cargando...",
     val fechaSeleccionada: LocalDate = LocalDate.now(),
     val listaMedicamentos: List<Medicamento> = emptyList(),
-    val proximaCita: CitaMedica? = null,
+    val listaCitasDelDia: List<CitaMedica> = emptyList(),
     val diasSemana: List<LocalDate> = emptyList()
 )
 
 class DashboardViewModel : ViewModel() {
-    var uiState by mutableStateOf(DashboardUiState())
+    var uiState by mutableStateOf(
+        DashboardUiState()
+    )
         private set
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private var listenerCitas: ListenerRegistration? = null
+    private var listenerMedicamentos: ListenerRegistration? = null
 
     init {
-        cargarDatos()
         generarSemana()
+        cargarDatosUsuario()
+        cargarMedicamentos()
+        cargarCitasPorFecha(
+            fecha = uiState.fechaSeleccionada
+        )
     }
 
-    fun cargarDatos() {
-        // Asignación de datos estáticos iniciales de Citas
-        uiState = uiState.copy(
-            proximaCita = CitaMedica(
-                doctor = "Dra. Ana García",
-                especialidad = "Cardiología",
-                fecha = "Mañana",
-                hora = "10:30 AM",
-                ubicacion = "Clínica Central, Consultorio 302"
+    private fun cargarDatosUsuario() {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection(
+            "usuarios"
+        ).document(
+            uid
+        ).get().addOnSuccessListener { documento ->
+            if (documento != null && documento.exists()) {
+                val nombre = documento.getString(
+                    "nombre"
+                ) ?: "Usuario"
+                uiState = uiState.copy(
+                    nombreUsuario = nombre
+                )
+            }
+        }
+    }
+
+    private fun cargarMedicamentos() {
+        val uid = auth.currentUser?.uid ?: return
+        listenerMedicamentos = firestore.collection(
+            "usuarios"
+        ).document(
+            uid
+        ).collection(
+            "medicamentos"
+        ).addSnapshotListener { instantaneo, error ->
+            if (error == null && instantaneo != null) {
+                val medicamentos = instantaneo.documents.mapNotNull { doc ->
+                    doc.toObject(
+                        Medicamento::class.java
+                    )?.copy(
+                        id = doc.id
+                    )
+                }
+                uiState = uiState.copy(
+                    listaMedicamentos = medicamentos
+                )
+            }
+        }
+    }
+
+    fun cargarCitasPorFecha(
+        fecha: LocalDate
+    ) {
+        val uid = auth.currentUser?.uid ?: return
+        val fechaString = fecha.format(
+            DateTimeFormatter.ofPattern(
+                "dd/MM/yyyy"
             )
         )
 
-        val uid = auth.currentUser?.uid
-        if (uid != null) {
-            // 1. Leer el nombre real desde Firestore bajo la ruta usuarios/{uid}
-            firestore.collection("usuarios").document(uid)
-                .get()
-                .addOnSuccessListener { documento ->
-                    if (documento != null && documento.exists()) {
-                        val nombreReal = documento.getString("nombre")
-                        if (!nombreReal.isNullOrBlank()) {
-                            uiState = uiState.copy(nombreUsuario = nombreReal)
-                        } else {
-                            uiState = uiState.copy(nombreUsuario = "Usuario")
-                        }
-                    } else {
-                        uiState = uiState.copy(nombreUsuario = "Usuario")
-                    }
+        listenerCitas?.remove()
+        
+        listenerCitas = firestore.collection(
+            "usuarios"
+        ).document(
+            uid
+        ).collection(
+            "citas"
+        ).whereEqualTo(
+            "fecha", 
+            fechaString
+        ).addSnapshotListener { instantaneo, error ->
+            if (error == null && instantaneo != null) {
+                val citas = instantaneo.documents.mapNotNull { doc ->
+                    doc.toObject(
+                        CitaMedica::class.java
+                    )?.copy(
+                        id = doc.id
+                    )
                 }
-                .addOnFailureListener {
-                    uiState = uiState.copy(nombreUsuario = "Usuario")
-                }
-
-            // 2. Leer medicamentos reales en tiempo real desde la subcolección usuarios/{uid}/medicamentos
-            firestore.collection("usuarios").document(uid).collection("medicamentos")
-                .addSnapshotListener { instantaneo, error ->
-                    if (error == null && instantaneo != null) {
-                        val medicamentos = instantaneo.documents.mapNotNull { doc ->
-                            val nombre = doc.getString("nombre") ?: return@mapNotNull null
-                            val tipo = doc.getString("tipo") ?: "Pastilla"
-                            val dosis = doc.getString("dosis") ?: ""
-                            val frecuencia = doc.getString("frecuencia") ?: ""
-                            val horaToma = doc.getString("horaToma") ?: ""
-                            val fechaInicio = doc.getString("fechaInicio") ?: ""
-                            val fechaFin = doc.getString("fechaFin") ?: ""
-                            val yaFueTomado = doc.getBoolean("yaFueTomado") ?: false
-                            Medicamento(
-                                id = doc.id,
-                                nombre = nombre,
-                                tipo = tipo,
-                                dosis = dosis,
-                                frecuencia = frecuencia,
-                                horaToma = horaToma,
-                                fechaInicio = fechaInicio,
-                                fechaFin = fechaFin,
-                                yaFueTomado = yaFueTomado
-                            )
-                        }
-                        uiState = uiState.copy(listaMedicamentos = medicamentos)
-                    }
-                }
-        } else {
-            uiState = uiState.copy(nombreUsuario = "Usuario")
+                uiState = uiState.copy(
+                    listaCitasDelDia = citas
+                )
+            }
         }
     }
 
     private fun generarSemana() {
         val hoy = LocalDate.now()
-        val semana = (0..6).map { hoy.plusDays(it.toLong()) }
-        uiState = uiState.copy(diasSemana = semana)
+        val semana = (0..6).map { 
+            hoy.plusDays(
+                it.toLong()
+            ) 
+        }
+        uiState = uiState.copy(
+            diasSemana = semana
+        )
     }
 
-    fun seleccionarFecha(fecha: LocalDate) {
-        uiState = uiState.copy(fechaSeleccionada = fecha)
+    fun seleccionarFecha(
+        fecha: LocalDate
+    ) {
+        uiState = uiState.copy(
+            fechaSeleccionada = fecha
+        )
+        cargarCitasPorFecha(
+            fecha = fecha
+        )
     }
 
-    // Función para actualizar el estado del medicamento en Firestore según corresponda (RF04)
-    fun actualizarEstadoMedicamento(medicamento: Medicamento, nuevoEstado: String) {
+    fun actualizarEstadoMedicamento(
+        medicamento: Medicamento,
+        nuevoEstado: String
+    ) {
         val uid = auth.currentUser?.uid ?: return
+        val docRef = firestore.collection(
+            "usuarios"
+        ).document(
+            uid
+        ).collection(
+            "medicamentos"
+        ).document(
+            medicamento.id
+        )
 
-        firestore.collection("usuarios").document(uid).collection("medicamentos")
-            .whereEqualTo("nombre", medicamento.nombre)
-            .whereEqualTo("horaToma", medicamento.horaToma)
-            .get()
-            .addOnSuccessListener { documentos ->
-                for (doc in documentos) {
-                    when (nuevoEstado) {
-                        "Tomar" -> doc.reference.update("yaFueTomado", true)
-                        "Pasar" -> doc.reference.update("yaFueTomado", false)
-                        "Reprogramar" -> {
-                            doc.reference.update("yaFueTomado", false)
-                        }
-                    }
-                }
-            }
+        when (nuevoEstado) {
+            "Tomar" -> docRef.update(
+                "yaFueTomado", 
+                true
+            )
+            "Pasar" -> docRef.update(
+                "yaFueTomado", 
+                false
+            )
+            "Reprogramar" -> docRef.update(
+                "yaFueTomado", 
+                false
+            )
+        }
     }
 
-    fun marcarComoTomado(medicamento: Medicamento) {
-        actualizarEstadoMedicamento(medicamento, "Tomar")
+    override fun onCleared() {
+        // No llamamos a super.onCleared() porque el IDE marca que es vacío
+        listenerCitas?.remove()
+        listenerMedicamentos?.remove()
     }
 }

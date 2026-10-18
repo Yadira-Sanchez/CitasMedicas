@@ -1,32 +1,37 @@
 package com.example.citasmedicas.data
 
+import com.google.firebase.Timestamp
+
 // Datos del usuario que se registra
 data class Usuario(
-    val nombre: String,
-    val correo: String,
-    val contrasena: String
-)
-
-// Datos del medicamento (RF14)
-data class Medicamento(
-    val id: String = "", // ID único de Firestore
     val nombre: String = "",
-    val tipo: String = "", // Ejemplo: Pastilla, Jarabe...
-    val dosis: String = "", // Ejemplo: 1 tableta, 10 ml...
-    val frecuencia: String = "", // Ejemplo: Cada 8 horas
-    val horaToma: String = "", // A qué hora se toma la primera vez
-    val fechaInicio: String = "",
-    val fechaFin: String = "", // Es opcional
-    val yaFueTomado: Boolean = false // Para saber si ya se tomó la medicina hoy
+    val correo: String = "",
+    val contrasena: String = ""
 )
 
-// Datos de la cita médica para la agenda y dashboard
+// Datos del medicamento (RF08, RF14)
+data class Medicamento(
+    val id: String = "",
+    val nombre: String = "",
+    val tipo: String = "",
+    val dosis: String = "",
+    val frecuencia: String = "",
+    val horaToma: String = "",
+    val fechaInicio: String = "",
+    val fechaFin: String = "",
+    val yaFueTomado: Boolean = false,
+    val recordatorioActivo: Boolean = true
+)
+
+// Datos de la cita médica (RF09)
 data class CitaMedica(
     val id: String = "",
-    val doctor: String,
-    val especialidad: String,
-    val fecha: String, // Formato YYYY-MM-DD o similar
-    val hora: String,
-    val ubicacion: String,
-    val estado: String = "Pendiente" // Pendiente, Confirmada, etc.
+    val especialidad: String = "", // Especialidad o Motivo
+    val doctor: String = "", // Opcional
+    val lugar: String = "",   // Ubicación
+    val fecha: String = "",  // DD/MM/YYYY
+    val hora: String = "",   // HH:MM
+    val recordatorioActivo: Boolean = true,
+    val notas: String = "",
+    val creadoEn: Timestamp = Timestamp.now()
 )
