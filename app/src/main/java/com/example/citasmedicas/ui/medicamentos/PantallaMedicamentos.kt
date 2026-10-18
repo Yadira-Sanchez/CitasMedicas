@@ -1,12 +1,13 @@
 package com.example.citasmedicas.ui.medicamentos
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.citasmedicas.data.Medicamento
 import com.example.citasmedicas.ui.dashboard.DashboardViewModel
 import com.example.citasmedicas.ui.theme.AzulPrimario
 
@@ -29,113 +30,232 @@ fun PantallaMedicamentos(
     medicamentoViewModel: MedicamentoViewModel = viewModel()
 ) {
     val uiState = dashboardViewModel.uiState
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = remember { 
+        SnackbarHostState() 
+    }
 
-    LaunchedEffect(medicamentoViewModel.eliminacionExitosa) {
+    LaunchedEffect(
+        key1 = medicamentoViewModel.eliminacionExitosa
+    ) {
         if (medicamentoViewModel.eliminacionExitosa) {
-            snackbarHostState.showSnackbar("Medicamento eliminado correctamente.")
+            snackbarHostState.showSnackbar(
+                message = "Medicamento eliminado correctamente."
+            )
         }
     }
 
-    LaunchedEffect(medicamentoViewModel.mensajeError) {
+    LaunchedEffect(
+        key1 = medicamentoViewModel.mensajeError
+    ) {
         medicamentoViewModel.mensajeError?.let {
-            snackbarHostState.showSnackbar(it)
+            snackbarHostState.showSnackbar(
+                message = it
+            )
         }
     }
 
     Scaffold(
         snackbarHost = { 
-            SnackbarHost(hostState = snackbarHostState) 
+            SnackbarHost(
+                hostState = snackbarHostState
+            ) 
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
             ) {
-                NavigationBarItem(
-                    icon = { 
-                        Icon(
-                            imageVector = Icons.Default.Home, 
-                            contentDescription = "Inicio"
-                        ) 
-                    },
-                    label = { 
-                        Text(
-                            text = "Inicio"
-                        ) 
-                    },
-                    selected = false,
+                // Botón Principal de Acción
+                Button(
                     onClick = { 
-                        alNavegarA("inicio") 
-                    }
-                )
-                NavigationBarItem(
-                    icon = { 
-                        Icon(
-                            imageVector = Icons.Default.Medication, 
-                            contentDescription = "Medicinas"
-                        ) 
+                        alAnadirMedicina() 
                     },
-                    label = { 
-                        Text(
-                            text = "Medicinas"
-                        ) 
-                    },
-                    selected = true,
-                    onClick = { }
-                )
-                NavigationBarItem(
-                    icon = { 
-                        Icon(
-                            imageVector = Icons.Default.Event, 
-                            contentDescription = "Citas"
-                        ) 
-                    },
-                    label = { 
-                        Text(
-                            text = "Citas"
-                        ) 
-                    },
-                    selected = false,
-                    onClick = { 
-                        alNavegarA("citas") 
-                    }
-                )
-                NavigationBarItem(
-                    icon = { 
-                        Icon(
-                            imageVector = Icons.Default.Person, 
-                            contentDescription = "Perfil"
-                        ) 
-                    },
-                    label = { 
-                        Text(
-                            text = "Perfil"
-                        ) 
-                    },
-                    selected = false,
-                    onClick = { 
-                        alNavegarA("perfil") 
-                    }
-                )
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 24.dp, 
+                            vertical = 12.dp
+                        )
+                        .height(
+                            height = 56.dp
+                        ),
+                    shape = RoundedCornerShape(
+                        size = 16.dp
+                    ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AzulPrimario
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                    Spacer(
+                        modifier = Modifier.width(
+                            width = 8.dp
+                        )
+                    )
+                    Text(
+                        text = "Agregar nuevo medicamento",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp
+                ) {
+                    NavigationBarItem(
+                        icon = { 
+                            Icon(
+                                imageVector = Icons.Default.Home, 
+                                contentDescription = "Inicio"
+                            ) 
+                        },
+                        label = { 
+                            Text(
+                                text = "Inicio"
+                            ) 
+                        },
+                        selected = false,
+                        onClick = { 
+                            alNavegarA("inicio") 
+                        }
+                    )
+                    NavigationBarItem(
+                        icon = { 
+                            Icon(
+                                imageVector = Icons.Default.Medication, 
+                                contentDescription = "Medicinas"
+                            ) 
+                        },
+                        label = { 
+                            Text(
+                                text = "Medicinas"
+                            ) 
+                        },
+                        selected = true,
+                        onClick = { }
+                    )
+                    NavigationBarItem(
+                        icon = { 
+                            Icon(
+                                imageVector = Icons.Default.Event, 
+                                contentDescription = "Citas"
+                            ) 
+                        },
+                        label = { 
+                            Text(
+                                text = "Citas"
+                            ) 
+                        },
+                        selected = false,
+                        onClick = { 
+                            alNavegarA("citas") 
+                        }
+                    )
+                    NavigationBarItem(
+                        icon = { 
+                            Icon(
+                                imageVector = Icons.Default.Person, 
+                                contentDescription = "Perfil"
+                            ) 
+                        },
+                        label = { 
+                            Text(
+                                text = "Perfil"
+                            ) 
+                        },
+                        selected = false,
+                        onClick = { 
+                            alNavegarA("perfil") 
+                        }
+                    )
+                }
             }
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(
+                    paddingValues = padding
+                )
+                .padding(
+                    horizontal = 20.dp
+                )
         ) {
             Spacer(
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.height(
+                    height = 24.dp
+                )
+            )
+
+            // Encabezado
+            Text(
+                text = "TRATAMIENTOS",
+                style = MaterialTheme.typography.labelLarge,
+                color = AzulPrimario,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 1.sp
             )
             
-            Text(
-                text = "Medicamentos activos",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp, start = 8.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        vertical = 4.dp
+                    ),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Medicamentos activos",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1C1E)
+                )
+            }
+
+            // Filtros por Chips
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        vertical = 8.dp
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(
+                    space = 8.dp
+                )
+            ) {
+                item {
+                    FilterChip(
+                        selected = true,
+                        onClick = { },
+                        label = { 
+                            Text(
+                                text = "Todos (${uiState.listaMedicamentos.size})"
+                            ) 
+                        },
+                        shape = RoundedCornerShape(
+                            size = 24.dp
+                        ),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = AzulPrimario,
+                            selectedLabelColor = Color.White
+                        ),
+                        border = null
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(
+                    height = 12.dp
+                )
             )
 
             if (uiState.listaMedicamentos.isEmpty()) {
@@ -150,69 +270,26 @@ fun PantallaMedicamentos(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(), 
-                    verticalArrangement = Arrangement.Top
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(
+                        space = 16.dp
+                    ),
+                    contentPadding = PaddingValues(
+                        bottom = 24.dp
+                    )
                 ) {
-                    items(uiState.listaMedicamentos) { medicamento ->
+                    items(
+                        items = uiState.listaMedicamentos
+                    ) { medicamento ->
                         ElementoMedicamentoItem(
                             medicamento = medicamento,
                             onClick = { 
                                 alVerDetalle(medicamento.id) 
                             }
                         )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            thickness = 0.5.dp,
-                            color = Color.LightGray.copy(alpha = 0.5f)
-                        )
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun ElementoMedicamentoItem(
-    medicamento: Medicamento, 
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 16.dp, horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val icono = when (medicamento.tipo) {
-            "Pastilla" -> Icons.Default.Medication
-            "Jarabe", "Gotas" -> Icons.Default.Opacity
-            "Inyección" -> Icons.Default.Vaccines
-            else -> Icons.Default.Medication
-        }
-
-        Icon(
-            imageVector = icono, 
-            contentDescription = null, 
-            tint = AzulPrimario, 
-            modifier = Modifier.size(32.dp)
-        )
-        Spacer(
-            modifier = Modifier.width(20.dp)
-        )
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = medicamento.nombre, 
-                style = MaterialTheme.typography.titleMedium, 
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Próximo recordatorio: hoy, ${medicamento.horaToma}", 
-                style = MaterialTheme.typography.bodySmall, 
-                color = Color.Gray
-            )
         }
     }
 }

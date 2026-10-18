@@ -11,7 +11,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -83,12 +84,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Scaffold { padding ->
+                Scaffold(
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0)
+                ) { padding ->
                     Box(
-                        modifier = Modifier
-                            .padding(
-                                paddingValues = padding
-                            )
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         NavHost(
                             navController = navController,
@@ -154,7 +154,14 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate("nuevo_medicamento")
                                     },
                                     alNavegarA = { destino ->
-                                        navController.navigate(destino)
+                                        if (destino == "perfil") {
+                                            auth.signOut()
+                                            navController.navigate("login") {
+                                                popUpTo("inicio") { inclusive = true }
+                                            }
+                                        } else {
+                                            navController.navigate(destino)
+                                        }
                                     },
                                     alVerDetalle = { id ->
                                         navController.navigate("detalle_medicamento/$id")
@@ -166,7 +173,14 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 PantallaCitas(
                                     alNavegarA = { destino ->
-                                        navController.navigate(destino)
+                                        if (destino == "perfil") {
+                                            auth.signOut()
+                                            navController.navigate("login") {
+                                                popUpTo("inicio") { inclusive = true }
+                                            }
+                                        } else {
+                                            navController.navigate(destino)
+                                        }
                                     },
                                     alNuevaCita = {
                                         navController.navigate("nueva_cita")

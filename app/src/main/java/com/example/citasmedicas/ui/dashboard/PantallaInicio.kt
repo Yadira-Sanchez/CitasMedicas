@@ -1,5 +1,8 @@
 package com.example.citasmedicas.ui.dashboard
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,13 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citasmedicas.data.Medicamento
 import com.example.citasmedicas.ui.citas.TarjetaCitaItem
 import com.example.citasmedicas.ui.theme.AzulPrimario
-import com.example.citasmedicas.ui.theme.VerdeClaro
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -38,22 +43,31 @@ fun PantallaInicio(
 ) {
     val uiState = viewModel.uiState
     val userId = FirebaseAuth.getInstance().currentUser?.uid
-    var menuAbierto by remember { mutableStateOf(false) }
+    var menuAbierto by remember { 
+        mutableStateOf(false) 
+    }
 
-    LaunchedEffect(userId) {
+    LaunchedEffect(
+        key1 = userId,
+        key2 = uiState.fechaSeleccionada
+    ) {
         if (userId != null) {
             viewModel.cargarCitasPorFecha(uiState.fechaSeleccionada)
         }
     }
 
-    var medicamentoSeleccionado by remember { mutableStateOf<Medicamento?>(null) }
-    var mostrarBottomSheet by remember { mutableStateOf(false) }
+    var medicamentoSeleccionado by remember { 
+        mutableStateOf<Medicamento?>(null) 
+    }
+    var mostrarBottomSheet by remember { 
+        mutableStateOf(false) 
+    }
     val estadoSheet = rememberModalBottomSheetState()
 
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = Color.White,
                 tonalElevation = 8.dp
             ) {
                 NavigationBarItem(
@@ -69,7 +83,12 @@ fun PantallaInicio(
                         Text(
                             text = "Inicio"
                         )
-                    }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AzulPrimario,
+                        selectedTextColor = AzulPrimario,
+                        indicatorColor = Color(0xFFF0F5FF)
+                    )
                 )
                 NavigationBarItem(
                     selected = false,
@@ -122,15 +141,17 @@ fun PantallaInicio(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 24.dp)
             ) {
-                // FAB Botón Chatbot IA (Izquierda)
+                // Botón del asistente/robot (Izquierda)
                 FloatingActionButton(
-                    onClick = { /* RF23: Abrir Asistente IA */ },
-                    containerColor = AzulPrimario,
+                    onClick = { /* RF23: Asistente IA */ },
+                    containerColor = Color(0xFF1B3E5F),
                     contentColor = Color.White,
                     shape = CircleShape,
-                    modifier = Modifier.align(Alignment.BottomStart)
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .size(56.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.SmartToy,
@@ -138,25 +159,31 @@ fun PantallaInicio(
                     )
                 }
 
-                // FAB Botón (+) con DropdownMenu (Derecha)
+                // Botón flotante (+) Turquesa (Derecha)
                 Box(
                     modifier = Modifier.align(Alignment.BottomEnd)
                 ) {
                     FloatingActionButton(
-                        onClick = { menuAbierto = true },
-                        containerColor = VerdeClaro,
+                        onClick = { 
+                            menuAbierto = true 
+                        },
+                        containerColor = Color(0xFF4DD0E1), // Turquesa
                         contentColor = Color.White,
-                        shape = CircleShape
+                        shape = CircleShape,
+                        modifier = Modifier.size(56.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Agregar"
+                            contentDescription = "Agregar",
+                            modifier = Modifier.size(32.dp)
                         )
                     }
 
                     DropdownMenu(
                         expanded = menuAbierto,
-                        onDismissRequest = { menuAbierto = false }
+                        onDismissRequest = { 
+                            menuAbierto = false 
+                        }
                     ) {
                         DropdownMenuItem(
                             text = {
@@ -200,74 +227,104 @@ fun PantallaInicio(
     ) { padding ->
         LazyColumn(
             modifier = Modifier
-                .padding(padding)
+                .padding(paddingValues = padding)
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 20.dp)
         ) {
             item {
                 Spacer(
-                    modifier = Modifier.height(8.dp)
+                    modifier = Modifier.height(height = 16.dp)
                 )
             }
 
-            // Cabecera: Saludo
+            // Encabezado del Usuario
             item {
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
+                    Column {
                         Text(
                             text = "Hola,",
-                            color = Color.Gray,
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.Gray
                         )
                         Text(
                             text = uiState.nombreUsuario,
-                            color = AzulPrimario,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1A1C1E)
                         )
                     }
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.LightGray,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.padding(8.dp)
+                    
+                    Box {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color(0xFF03A9F4),
+                            modifier = Modifier.size(size = 52.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.padding(all = 8.dp)
+                            )
+                        }
+                        // Punto indicador de estado
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .background(
+                                    color = Color(0xFF4CAF50),
+                                    shape = CircleShape
+                                )
+                                .border(
+                                    width = 2.dp,
+                                    color = Color.White,
+                                    shape = CircleShape
+                                )
+                                .align(Alignment.BottomEnd)
                         )
                     }
                 }
             }
 
-            // Buscador
+            // Barra de Búsqueda
             item {
                 OutlinedTextField(
                     value = "",
                     onValueChange = { },
                     placeholder = {
                         Text(
-                            text = "Buscar medicamentos o citas..."
+                            text = "Buscar medicamentos o citas...",
+                            color = Color.LightGray
                         )
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = Color.White,
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    shape = RoundedCornerShape(size = 16.dp),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = Color.Gray
                         )
-                    }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
+                        focusedBorderColor = AzulPrimario
+                    ),
+                    singleLine = true
                 )
             }
 
-            // Calendario
+            // Sección Calendario
             item {
                 Column {
                     Row(
@@ -283,37 +340,63 @@ fun PantallaInicio(
                         Text(
                             text = "Ver todo",
                             color = AzulPrimario,
-                            modifier = Modifier.clickable {
-                                alVerCitas()
-                            }
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.clickable { alVerCitas() }
                         )
                     }
                     Spacer(
-                        modifier = Modifier.height(8.dp)
+                        modifier = Modifier.height(height = 12.dp)
                     )
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(space = 10.dp)
                     ) {
-                        items(uiState.diasSemana) { fecha ->
+                        items(items = uiState.diasSemana) { fecha ->
                             DiaItem(
                                 fecha = fecha,
                                 estaSeleccionado = fecha == uiState.fechaSeleccionada,
-                                alSeleccionar = {
-                                    viewModel.seleccionarFecha(fecha)
-                                }
+                                alSeleccionar = { viewModel.seleccionarFecha(fecha) }
                             )
                         }
                     }
                 }
             }
 
-            // Tomas del día
+            // Sección "Tomas de Hoy"
             item {
-                Text(
-                    text = "Tomas del día",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Tomas de Hoy",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(
+                        modifier = Modifier.width(width = 8.dp)
+                    )
+                    Surface(
+                        color = Color(0xFFE3F2FD),
+                        shape = RoundedCornerShape(size = 12.dp)
+                    ) {
+                        Text(
+                            text = "${uiState.listaMedicamentos.size} hoy",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = AzulPrimario,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(
+                        modifier = Modifier.weight(weight = 1f)
+                    )
+                    val formatter = DateTimeFormatter.ofPattern("EEEE, d MMM", Locale.forLanguageTag("es-ES"))
+                    Text(
+                        text = uiState.fechaSeleccionada.format(formatter),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
             }
 
             if (uiState.listaMedicamentos.isEmpty()) {
@@ -325,7 +408,7 @@ fun PantallaInicio(
                     )
                 }
             } else {
-                items(uiState.listaMedicamentos) { med ->
+                items(items = uiState.listaMedicamentos) { med ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -333,45 +416,113 @@ fun PantallaInicio(
                                 medicamentoSeleccionado = med
                                 mostrarBottomSheet = true
                             },
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White
-                        ),
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = 2.dp
-                        )
+                        shape = RoundedCornerShape(size = 16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(all = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Medication,
-                                contentDescription = null,
-                                tint = if (med.yaFueTomado) VerdeClaro else Color.Gray,
-                                modifier = Modifier.size(32.dp)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(size = 48.dp)
+                                    .background(
+                                        color = Color(0xFFE1F5FE),
+                                        shape = RoundedCornerShape(size = 12.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val icon = when(med.tipo) {
+                                    "Gotas" -> Icons.Default.WaterDrop
+                                    "Jarabe" -> Icons.Default.MedicalServices
+                                    else -> Icons.Default.Medication
+                                }
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = AzulPrimario,
+                                    modifier = Modifier.size(size = 24.dp)
+                                )
+                            }
+
                             Spacer(
-                                modifier = Modifier.width(16.dp)
+                                modifier = Modifier.width(width = 16.dp)
                             )
+
                             Column(
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(weight = 1f)
                             ) {
                                 Text(
                                     text = med.nombre,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Text(
-                                    text = "${med.dosis} • ${med.horaToma}",
-                                    color = Color.Gray,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = med.dosis,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray
+                                    )
+                                    if (!med.yaFueTomado) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Surface(
+                                            color = Color(0xFFFFF9C4),
+                                            shape = RoundedCornerShape(size = 8.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Schedule,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(size = 12.dp),
+                                                    tint = Color(0xFFF57C00)
+                                                )
+                                                Text(
+                                                    text = " ${med.horaToma}",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = Color(0xFFF57C00),
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Text(
+                                            text = " • ${med.horaToma}",
+                                            color = Color.Gray,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
                             }
+
+                            // Botón de estado circular
                             if (med.yaFueTomado) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = "Tomado",
-                                    tint = VerdeClaro
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(0xFF4DB6AC), // Verde menta
+                                    modifier = Modifier.size(size = 32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Completado",
+                                        tint = Color.White,
+                                        modifier = Modifier.padding(all = 6.dp)
+                                    )
+                                }
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .size(size = 32.dp)
+                                        .border(
+                                            width = 2.dp,
+                                            color = Color.LightGray.copy(alpha = 0.5f),
+                                            shape = CircleShape
+                                        )
                                 )
                             }
                         }
@@ -397,16 +548,14 @@ fun PantallaInicio(
                     )
                 }
             } else {
-                items(uiState.listaCitasDelDia) { cita ->
-                    TarjetaCitaItem(
-                        cita = cita
-                    )
+                items(items = uiState.listaCitasDelDia) { cita ->
+                    TarjetaCitaItem(cita = cita)
                 }
             }
 
             item {
                 Spacer(
-                    modifier = Modifier.height(80.dp)
+                    modifier = Modifier.height(height = 100.dp)
                 )
             }
         }
@@ -415,21 +564,20 @@ fun PantallaInicio(
     if (mostrarBottomSheet && medicamentoSeleccionado != null) {
         val med = medicamentoSeleccionado!!
         ModalBottomSheet(
-            onDismissRequest = {
-                mostrarBottomSheet = false
-            },
-            sheetState = estadoSheet
+            onDismissRequest = { mostrarBottomSheet = false },
+            sheetState = estadoSheet,
+            containerColor = Color.White
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(space = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = med.nombre,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = AzulPrimario
                 )
@@ -438,68 +586,30 @@ fun PantallaInicio(
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )
-
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
-
+                Spacer(modifier = Modifier.height(height = 8.dp))
                 Button(
                     onClick = {
                         viewModel.actualizarEstadoMedicamento(med, "Tomar")
                         mostrarBottomSheet = false
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = VerdeClaro
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4DB6AC)),
+                    modifier = Modifier.fillMaxWidth().height(height = 56.dp),
+                    shape = RoundedCornerShape(size = 16.dp)
                 ) {
-                    Text(
-                        text = "Tomar",
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "Tomar", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
-
                 Button(
                     onClick = {
                         viewModel.actualizarEstadoMedicamento(med, "Pasar")
                         mostrarBottomSheet = false
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Gray
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
+                    modifier = Modifier.fillMaxWidth().height(height = 56.dp),
+                    shape = RoundedCornerShape(size = 16.dp)
                 ) {
-                    Text(
-                        text = "Pasar",
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "Pasar", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
                 }
 
-                OutlinedButton(
-                    onClick = {
-                        viewModel.actualizarEstadoMedicamento(med, "Reprogramar")
-                        mostrarBottomSheet = false
-                    },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = AzulPrimario
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    Text(
-                        text = "Reprogramar",
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(
-                    modifier = Modifier.height(24.dp)
-                )
             }
         }
     }
@@ -517,31 +627,40 @@ fun DiaItem(
 
     Card(
         onClick = alSeleccionar,
-        modifier = Modifier.width(60.dp),
+        modifier = Modifier.width(width = 64.dp).height(height = 80.dp),
+        shape = RoundedCornerShape(size = 16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (estaSeleccionado) AzulPrimario else Color.White
+            containerColor = if (estaSeleccionado) Color(0xFF0D47A1) else Color.White
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        border = if (!estaSeleccionado) BorderStroke(width = 1.dp, color = Color.LightGray.copy(alpha = 0.2f)) else null,
+        elevation = CardDefaults.cardElevation(defaultElevation = if (estaSeleccionado) 4.dp else 0.dp)
     ) {
         Column(
-            modifier = Modifier
-                .padding(vertical = 12.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize().padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = diaNombre.uppercase(localeEs),
-                style = MaterialTheme.typography.labelMedium,
-                color = if (estaSeleccionado) Color.White else Color.Gray
+                style = MaterialTheme.typography.labelSmall,
+                color = if (estaSeleccionado) Color.White.copy(alpha = 0.7f) else Color.Gray,
+                fontWeight = FontWeight.Bold
             )
             Text(
                 text = diaNumero,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = if (estaSeleccionado) Color.White else Color.Black
             )
+            if (estaSeleccionado) {
+                Box(
+                    modifier = Modifier
+                        .size(size = 4.dp)
+                        .background(color = Color.White, shape = CircleShape)
+                )
+            } else {
+                Spacer(modifier = Modifier.height(height = 4.dp))
+            }
         }
     }
 }

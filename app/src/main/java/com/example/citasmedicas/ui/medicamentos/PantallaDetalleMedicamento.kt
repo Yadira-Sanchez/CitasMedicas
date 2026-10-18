@@ -1,10 +1,14 @@
 package com.example.citasmedicas.ui.medicamentos
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,14 +32,20 @@ fun PantallaDetalleMedicamento(
     modelo: MedicamentoViewModel = viewModel()
 ) {
     val medicamento = modelo.medicamentoSeleccionado
-    var mostrarDialogoEliminar by remember { mutableStateOf(false) }
+    var mostrarDialogoEliminar by remember { 
+        mutableStateOf(false) 
+    }
 
-    LaunchedEffect(medicamentoId) {
+    LaunchedEffect(
+        key1 = medicamentoId
+    ) {
         modelo.obtenerMedicamentoPorId(medicamentoId)
     }
 
     // Navegar atrás cuando se elimine con éxito
-    LaunchedEffect(modelo.eliminacionExitosa) {
+    LaunchedEffect(
+        key1 = modelo.eliminacionExitosa
+    ) {
         if (modelo.eliminacionExitosa) {
             alVolver()
         }
@@ -43,11 +53,13 @@ fun PantallaDetalleMedicamento(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Detalle",
-                        fontFamily = FontFamily.Default
+                        text = "Detalle del Medicamento",
+                        fontFamily = FontFamily.Default,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
                     )
                 },
                 navigationIcon = {
@@ -67,7 +79,9 @@ fun PantallaDetalleMedicamento(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
+                    .padding(
+                        paddingValues = padding
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
@@ -75,20 +89,18 @@ fun PantallaDetalleMedicamento(
                 )
             }
         } else {
-            Column(
-                modifier = Modifier
-                    .padding(padding)
-            ) {
-                ContenidoDetalleMedicamento(
-                    medicamento = medicamento,
-                    alEditar = {
-                        alEditar(medicamento.id)
-                    },
-                    alEliminar = {
-                        mostrarDialogoEliminar = true
-                    }
-                )
-            }
+            ContenidoDetalleMedicamento(
+                medicamento = medicamento,
+                modifier = Modifier.padding(
+                    paddingValues = padding
+                ),
+                alEditar = {
+                    alEditar(medicamento.id)
+                },
+                alEliminar = {
+                    mostrarDialogoEliminar = true
+                }
+            )
         }
     }
 
@@ -117,7 +129,7 @@ fun PantallaDetalleMedicamento(
                 ) {
                     Text(
                         text = "Eliminar",
-                        color = Color(0xFFE57373)
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             },
@@ -140,139 +152,323 @@ fun PantallaDetalleMedicamento(
 @Composable
 fun ContenidoDetalleMedicamento(
     medicamento: Medicamento,
+    modifier: Modifier = Modifier,
     alEditar: () -> Unit,
     alEliminar: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(
+                state = rememberScrollState()
+            )
+            .padding(
+                horizontal = 24.dp,
+                vertical = 16.dp
+            )
     ) {
-        Text(
-            text = medicamento.nombre,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Default,
-            color = AzulPrimario
-        )
-
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
-
+        // Chip de tipo
         AssistChip(
             onClick = { },
             label = {
                 Text(
                     text = medicamento.tipo,
-                    fontFamily = FontFamily.Default
+                    color = AzulPrimario,
+                    fontWeight = FontWeight.Medium
                 )
             },
             leadingIcon = {
                 val icono = when (medicamento.tipo) {
                     "Pastilla" -> Icons.Default.Medication
-                    "Jarabe", "Gotas" -> Icons.Default.Opacity
+                    "Jarabe", "Gotas" -> Icons.Default.WaterDrop
                     "Inyección" -> Icons.Default.Vaccines
                     else -> Icons.Default.Medication
                 }
                 Icon(
                     imageVector = icono,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    tint = AzulPrimario,
+                    modifier = Modifier.size(
+                        size = 18.dp
+                    )
                 )
             },
-            colors = AssistChipDefaults.assistChipColors(
-                labelColor = AzulPrimario,
-                leadingIconContentColor = AzulPrimario
+            shape = RoundedCornerShape(
+                size = 12.dp
             ),
-            shape = RoundedCornerShape(12.dp)
+            colors = AssistChipDefaults.assistChipColors(
+                containerColor = Color(0xFFF0F7FF),
+                labelColor = AzulPrimario
+            ),
+            border = null
         )
 
         Spacer(
-            modifier = Modifier.height(24.dp)
+            modifier = Modifier.height(
+                height = 12.dp
+            )
         )
 
+        // Nombre del medicamento
+        Text(
+            text = medicamento.nombre,
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color.Black
+        )
+
+        Spacer(
+            modifier = Modifier.height(
+                height = 24.dp
+            )
+        )
+
+        // Tarjeta Destacada de Próxima Toma
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF8F9FA)
+            shape = RoundedCornerShape(
+                size = 20.dp
             ),
-            shape = RoundedCornerShape(16.dp)
+            colors = CardDefaults.cardColors(
+                containerColor = AzulPrimario
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(
+                        all = 20.dp
+                    )
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier.weight(
+                        weight = 1f
+                    )
+                ) {
+                    Text(
+                        text = "PRÓXIMA TOMA PROGRAMADA",
+                        color = Color.White.copy(
+                            alpha = 0.8f
+                        ),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp
+                    )
+                    Row(
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = medicamento.horaToma,
+                            color = Color.White,
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(
+                            modifier = Modifier.width(
+                                width = 8.dp
+                            )
+                        )
+                        Text(
+                            text = "Hoy",
+                            color = Color.White.copy(
+                                alpha = 0.8f
+                            ),
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(
+                                bottom = 4.dp
+                            )
+                        )
+                    }
+                    Text(
+                        text = "Dosis: ${medicamento.dosis}",
+                        color = Color.White.copy(
+                            alpha = 0.9f
+                        ),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(
+                        size = 12.dp
+                    ),
+                    color = Color.White.copy(
+                        alpha = 0.2f
+                    ),
+                    modifier = Modifier.size(
+                        size = 48.dp
+                    )
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Schedule,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(
+                                size = 24.dp
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(
+            modifier = Modifier.height(
+                height = 24.dp
+            )
+        )
+
+        // Tarjeta Central de Detalles
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(
+                size = 16.dp
+            ),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 0.dp
+            )
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(
+                    vertical = 8.dp
+                )
             ) {
                 ItemDetalle(
-                    icono = Icons.Default.Straighten,
-                    titulo = "Dosis",
-                    valor = medicamento.dosis
+                    icono = Icons.Default.Medication,
+                    titulo = "Dosis recomendada",
+                    valor = medicamento.dosis,
+                    colorFondoIcono = Color(0xFFE3F2FD),
+                    colorIcono = Color(0xFF1976D2)
                 )
                 HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    thickness = 0.5.dp
+                    modifier = Modifier.padding(
+                        horizontal = 24.dp
+                    ),
+                    thickness = 0.5.dp,
+                    color = Color.LightGray.copy(
+                        alpha = 0.3f
+                    )
                 )
                 ItemDetalle(
-                    icono = Icons.Default.Repeat,
+                    icono = Icons.Default.Refresh,
                     titulo = "Frecuencia",
-                    valor = medicamento.frecuencia
+                    valor = medicamento.frecuencia,
+                    colorFondoIcono = Color(0xFFF3E5F5),
+                    colorIcono = Color(0xFF7B1FA2)
                 )
                 HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    thickness = 0.5.dp
+                    modifier = Modifier.padding(
+                        horizontal = 24.dp
+                    ),
+                    thickness = 0.5.dp,
+                    color = Color.LightGray.copy(
+                        alpha = 0.3f
+                    )
                 )
                 ItemDetalle(
                     icono = Icons.Default.Schedule,
-                    titulo = "Horario Programado",
-                    valor = "Primera toma a las ${medicamento.horaToma}"
+                    titulo = "Horario programado",
+                    valor = "Primera toma a las ${medicamento.horaToma}",
+                    colorFondoIcono = Color(0xFFE8F5E9),
+                    colorIcono = Color(0xFF388E3C)
                 )
                 HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    thickness = 0.5.dp
+                    modifier = Modifier.padding(
+                        horizontal = 24.dp
+                    ),
+                    thickness = 0.5.dp,
+                    color = Color.LightGray.copy(
+                        alpha = 0.3f
+                    )
                 )
                 ItemDetalle(
                     icono = Icons.Default.CalendarToday,
                     titulo = "Duración",
-                    valor = if (medicamento.fechaFin.isEmpty()) "Inicia el ${medicamento.fechaInicio}" else "Del ${medicamento.fechaInicio} al ${medicamento.fechaFin}"
+                    valor = if (medicamento.fechaFin.isEmpty()) "Tratamiento continuo" else "Del ${medicamento.fechaInicio} al ${medicamento.fechaFin}",
+                    colorFondoIcono = Color(0xFFFFFDE7),
+                    colorIcono = Color(0xFFFBC02D)
                 )
             }
         }
 
         Spacer(
-            modifier = Modifier.height(32.dp)
+            modifier = Modifier.weight(
+                weight = 1f
+            )
+        )
+        
+        Spacer(
+            modifier = Modifier.height(
+                height = 32.dp
+            )
         )
 
+        // Botonera de Acción Inferior
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    bottom = 16.dp
+                ),
+            horizontalArrangement = Arrangement.spacedBy(
+                space = 16.dp
+            )
         ) {
             OutlinedButton(
                 onClick = alEditar,
                 modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp)
+                    .weight(
+                        weight = 1f
+                    )
+                    .height(
+                        height = 56.dp
+                    ),
+                shape = RoundedCornerShape(
+                    size = 16.dp
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color(0xFFF0F7FF),
+                    contentColor = AzulPrimario
+                ),
+                border = null
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = null
                 )
                 Spacer(
-                    modifier = Modifier.width(8.dp)
+                    modifier = Modifier.width(
+                        width = 8.dp
+                    )
                 )
                 Text(
                     text = "Editar",
-                    fontFamily = FontFamily.Default
+                    fontWeight = FontWeight.Bold
                 )
             }
 
             Button(
                 onClick = alEliminar,
                 modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
+                    .weight(
+                        weight = 1f
+                    )
+                    .height(
+                        height = 56.dp
+                    ),
+                shape = RoundedCornerShape(
+                    size = 16.dp
+                ),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE57373)
+                    containerColor = MaterialTheme.colorScheme.error
                 )
             ) {
                 Icon(
@@ -280,11 +476,13 @@ fun ContenidoDetalleMedicamento(
                     contentDescription = null
                 )
                 Spacer(
-                    modifier = Modifier.width(8.dp)
+                    modifier = Modifier.width(
+                        width = 8.dp
+                    )
                 )
                 Text(
                     text = "Eliminar",
-                    fontFamily = FontFamily.Default
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -295,32 +493,58 @@ fun ContenidoDetalleMedicamento(
 fun ItemDetalle(
     icono: ImageVector,
     titulo: String,
-    valor: String
+    valor: String,
+    colorFondoIcono: Color,
+    colorIcono: Color
 ) {
     Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                all = 16.dp
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icono,
-            contentDescription = null,
-            tint = Color.Gray,
-            modifier = Modifier.size(24.dp)
-        )
+        Surface(
+            modifier = Modifier.size(
+                size = 44.dp
+            ),
+            shape = RoundedCornerShape(
+                size = 12.dp
+            ),
+            color = colorFondoIcono
+        ) {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icono,
+                    contentDescription = null,
+                    tint = colorIcono,
+                    modifier = Modifier.size(
+                        size = 22.dp
+                    )
+                )
+            }
+        }
+        
         Spacer(
-            modifier = Modifier.width(16.dp)
+            modifier = Modifier.width(
+                width = 16.dp
+            )
         )
+        
         Column {
             Text(
                 text = titulo,
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 color = Color.Gray,
-                fontFamily = FontFamily.Default
+                fontWeight = FontWeight.Normal
             )
             Text(
                 text = valor,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = FontFamily.Default,
+                fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
         }
