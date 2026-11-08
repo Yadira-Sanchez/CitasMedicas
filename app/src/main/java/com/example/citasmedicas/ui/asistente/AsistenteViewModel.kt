@@ -1,92 +1,118 @@
 package com.example.citasmedicas.ui.asistente
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.citasmedicas.data.CitaMedica
+import com.example.citasmedicas.data.Medicamento
 import com.example.citasmedicas.data.MensajeChat
-import kotlinx.coroutines.delay
+import com.example.citasmedicas.util.GroqApiClient
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class AsistenteUiState(
-    val listaMensajes: List<MensajeChat> = listOf(
-        MensajeChat(
-            texto = "¡Hola! Soy tu asistente médico virtual. ¿En qué puedo ayudarte hoy?",
-            esDelUsuario = false
-        )
-    ),
-    val textoMensaje: String = "",
-    val estaEscribiendo: Boolean = false
-)
-
 class AsistenteViewModel : ViewModel() {
-    var uiState by mutableStateOf(
-        AsistenteUiState()
+
+    private val groqClient = GroqApiClient()
+
+    private val _mensajes = MutableStateFlow<List<MensajeChat>>(
+        value = emptyList()
     )
-        private set
+    val mensajes: StateFlow<List<MensajeChat>> = _mensajes.asStateFlow()
 
-    fun actualizarTexto(
-        nuevoTexto: String
+    private val _estaCargando = MutableStateFlow(
+        value = false
+    )
+    val estaCargando: StateFlow<Boolean> = _estaCargando.asStateFlow()
+
+    /**
+     * Envía una pregunta al asistente inyectando el contexto de salud del usuario.
+     */
+    fun enviarMensaje(
+        pregunta: String,
+        medicamentos: List<Medicamento>,
+        citas: List<CitaMedica>
     ) {
-        uiState = uiState.copy(
-            textoMensaje = nuevoTexto
-        )
-    }
-
-    fun enviarMensaje() {
-        val texto = uiState.textoMensaje.trim()
-        if (texto.isEmpty()) return
+        if (pregunta.isBlank()) return
 
         val nuevoMensajeUsuario = MensajeChat(
-            texto = texto,
+            texto = pregunta,
             esDelUsuario = true
         )
+        _mensajes.value = _mensajes.value + nuevoMensajeUsuario
 
-        uiState = uiState.copy(
-            listaMensajes = uiState.listaMensajes + nuevoMensajeUsuario,
-            textoMensaje = "",
-            estaEscribiendo = true
-        )
+        viewModelScope.launch {
+            _estaCargando.value = true
+            try {
+                val systemPrompt = construirSystemPrompt(
+                    medicamentos = medicamentos,
+                    citas = citas
+                )
+                
+                val respuestaTexto = groqClient.enviarPregunta(
+                    systemPrompt = systemPrompt,
+                    preguntaUsuario = pregunta
+                )
 
-        generarRespuestaAsistente(
-            mensajeUsuario = texto
-        )
+                val mensajeIA = MensajeChat(
+                    texto = respuestaTexto,
+                    esDelUsuario = false
+                )
+                _mensajes.value = _mensajes.value + mensajeIA
+            } catch (e: Exception) {
+                val mensajeError = MensajeChat(
+                    texto = "Lo siento, no he podido procesar tu solicitud. Revisa tu conexión.",
+                    esDelUsuario = false
+                )
+                _mensajes.value = _mensajes.value + mensajeError
+            } finally {
+                _estaCargando.value = false
+            }
+        }
     }
 
-    private fun generarRespuestaAsistente(
-        mensajeUsuario: String
-    ) {
-        viewModelScope.launch {
-            // Simulamos un retraso de "pensamiento" de la IA
-            delay(1500)
+    /**
 
-            val respuestaTexto = when {
-                mensajeUsuario.contains("hola", ignoreCase = true) -> 
-                    "¡Hola de nuevo! Estoy aquí para ayudarte con tus medicamentos y citas."
-                
-                mensajeUsuario.contains("cita", ignoreCase = true) -> 
-                    "Puedes revisar tus citas en la sección de 'Citas' o agregar una nueva con el botón '+' en el inicio."
-                
-                mensajeUsuario.contains("medicina", ignoreCase = true) || 
-                mensajeUsuario.contains("medicamento", ignoreCase = true) -> 
-                    "Recuerda que es importante tomar tus medicinas a la hora exacta. ¿Quieres que te ayude a revisar tu horario?"
-                
-                mensajeUsuario.contains("gracias", ignoreCase = true) -> 
-                    "¡De nada! Estoy para servirte."
-                
-                else -> "Entiendo. Como tu asistente virtual, te sugiero mantener al día tus registros de salud. ¿Hay algo específico sobre tus recordatorios que desees saber?"
-            }
-
-            val respuestaAsistente = MensajeChat(
-                texto = respuestaTexto,
-                esDelUsuario = false
-            )
-
-            uiState = uiState.copy(
-                listaMensajes = uiState.listaMensajes + respuestaAsistente,
-                estaEscribiendo = false
-            )
+     * Construye el prompt del sistema con el contexto dinámico del usuario.     */
+    private fun construirSystemPrompt(
+        medicamentos: List<Medicamento>,
+        citas: List<CitaMedica>
+    ): String {
+        // 1. Quitamos los ** de aquí para que los datos vayan limpios
+        val medsInfo = medicamentos.joinToString("\n") {
+            "- ${it.nombre}: ${it.dosis} cada ${it.frecuencia} (${it.horaToma} hrs)"
         }
+        val citasInfo = citas.joinToString("\n") {
+            "- ${it.especialidad} con Dr. ${it.doctor} el ${it.fecha} a las ${it.hora}"
+        }
+
+        return """
+            Eres VitalisAI, un asistente virtual de salud amigable, claro y conciso.
+            Responde SIEMPRE en español.
+            
+            FORMATO DE RESPUESTA (IMPORTANTE):
+            1. Usa solo TEXTO PLANO.
+            2. NO uses asteriscos (*), almohadillas (#), barras (|) ni guiones bajos (_).
+            3. Para resaltar algo, simplemente usa MAYÚSCULAS en la palabra importante.
+            4. Usa listas con guiones simples (-) y deja una línea en blanco entre párrafos.
+            
+            CONTEXTO DEL USUARIO:
+            Medicamentos activos:
+            $medsInfo
+            
+            Próximas citas médicas:
+            $citasInfo
+            
+            INSTRUCCIÓN CRÍTICA:
+            Al final, incluye el descargo de responsabilidad en una línea aparte.
+            "Nota: Esta información es únicamente orientativa y no sustituye la consulta ni la prescripción de un médico profesional."
+        """.trimIndent()
+    }
+
+    /**
+     * Limpia el historial de la conversación actual.
+     */
+    fun limpiarHistorial() {
+        _mensajes.value = emptyList()
     }
 }

@@ -1,3 +1,6 @@
+
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -16,7 +19,19 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val groqApiKey = localProperties.getProperty("GROQ_API_KEY", "")
+
+        buildConfigField("String", "GROQ_API_KEY", "\"${localProperties.getProperty("GROQ_API_KEY", "")}\"")
     }
+
+
 
     buildTypes {
         release {
@@ -33,6 +48,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -59,6 +75,12 @@ dependencies {
     // ViewModel para Compose
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.ui)
+
+    // Retrofit y Networking (Se mantienen para otros servicios si existen)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

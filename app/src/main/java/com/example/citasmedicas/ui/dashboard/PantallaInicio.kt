@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citasmedicas.data.Medicamento
+import com.example.citasmedicas.ui.asistente.PantallaChatbotModal
 import com.example.citasmedicas.ui.citas.TarjetaCitaItem
 import com.example.citasmedicas.ui.theme.AzulPrimario
 import com.google.firebase.auth.FirebaseAuth
@@ -46,6 +47,9 @@ fun PantallaInicio(
     val uiState = viewModel.uiState
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     var menuAbierto by remember { 
+        mutableStateOf(false) 
+    }
+    var mostrarChatbot by remember { 
         mutableStateOf(false) 
     }
 
@@ -150,7 +154,9 @@ fun PantallaInicio(
                     )
             ) {
                 FloatingActionButton(
-                    onClick = { /* Asistente IA */ },
+                    onClick = { 
+                        mostrarChatbot = true 
+                    },
                     containerColor = Color(0xFF1B3E5F),
                     contentColor = Color.White,
                     shape = CircleShape,
@@ -545,6 +551,16 @@ fun PantallaInicio(
                 }
             }
         }
+    }
+
+    if (mostrarChatbot) {
+        PantallaChatbotModal(
+            alCerrar = { 
+                mostrarChatbot = false 
+            },
+            medicamentos = uiState.listaMedicamentos,
+            citas = uiState.listaCitasDelDia
+        )
     }
 }
 
