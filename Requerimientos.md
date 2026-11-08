@@ -2,7 +2,7 @@
 
 - RF01 - Registro de usuario 
 - RF02 - Inicio de sesión 
-- RF03 - Recuperación de contraseña  
+- RF03 - Cambio de contraseña del usuario  
 - RF04 - Visualización de pantalla principal  
 - RF05 - Registro de medicamentos 
 - RF06 - Edición de medicamentos 

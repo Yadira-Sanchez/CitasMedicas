@@ -31,6 +31,7 @@ import com.example.citasmedicas.ui.theme.AzulPrimario
 fun PantallaCitas(
     alNavegarA: (String) -> Unit,
     alNuevaCita: () -> Unit,
+    alDetalleCita: (String) -> Unit = {},
     modelo: CitaViewModel = viewModel()
 ) {
     val citas = modelo.listaCitas
@@ -49,13 +50,13 @@ fun PantallaCitas(
             ) {
                 // Botón Principal de Acción
                 Button(
-                    onClick = { 
-                        alNuevaCita() 
+                    onClick = {
+                        alNuevaCita()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            horizontal = 24.dp, 
+                            horizontal = 24.dp,
                             vertical = 12.dp
                         )
                         .height(
@@ -184,7 +185,7 @@ fun PantallaCitas(
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 1.sp
             )
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -200,7 +201,7 @@ fun PantallaCitas(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1A1C1E)
                 )
-                
+
                 Surface(
                     shape = CircleShape,
                     color = Color.White,
@@ -239,7 +240,7 @@ fun PantallaCitas(
                     FilterChip(
                         selected = true,
                         onClick = { },
-                        label = { 
+                        label = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -305,10 +306,11 @@ fun PantallaCitas(
                         items = citas
                     ) { cita ->
                         TarjetaCitaItem(
-                            cita = cita
+                            cita = cita,
+                            onClick = { alDetalleCita(cita.id) }
                         )
                     }
-                    
+
                     item {
                         // Tarjeta Informativa Inferior
                         Card(
@@ -368,7 +370,8 @@ fun PantallaCitas(
 
 @Composable
 fun TarjetaCitaItem(
-    cita: CitaMedica
+    cita: CitaMedica,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -381,7 +384,8 @@ fun TarjetaCitaItem(
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
-        )
+        ),
+        onClick = onClick
     ) {
         Column {
             // Línea superior de color
@@ -459,7 +463,7 @@ fun TarjetaCitaItem(
                             )
                         }
                     }
-                    
+
                     // Badge de Estado
                     Surface(
                         color = Color(0xFFE8F5E9),
@@ -470,7 +474,7 @@ fun TarjetaCitaItem(
                         Text(
                             text = "Programada",
                             modifier = Modifier.padding(
-                                horizontal = 8.dp, 
+                                horizontal = 8.dp,
                                 vertical = 4.dp
                             ),
                             style = MaterialTheme.typography.labelSmall,
@@ -528,7 +532,7 @@ fun TarjetaCitaItem(
                             )
                         }
                     }
-                    
+
                     // Contenedor Hora
                     Surface(
                         modifier = Modifier.weight(
@@ -600,7 +604,7 @@ fun TarjetaCitaItem(
                             color = Color.Gray
                         )
                     }
-                    
+
                     Surface(
                         color = Color(0xFFF5F7FA),
                         shape = RoundedCornerShape(
@@ -633,33 +637,7 @@ fun TarjetaCitaItem(
                     )
                 ) {
                     Button(
-                        onClick = { /* Acción Reprogramar */ },
-                        modifier = Modifier
-                            .weight(
-                                weight = 1f
-                            )
-                            .height(
-                                height = 44.dp
-                            ),
-                        shape = RoundedCornerShape(
-                            size = 12.dp
-                        ),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFF5F7FA),
-                            contentColor = Color.DarkGray
-                        ),
-                        elevation = null,
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Text(
-                            text = "Reprogramar",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
-                    
-                    Button(
-                        onClick = { /* Acción Ver Detalles */ },
+                        onClick = onClick,
                         modifier = Modifier
                             .weight(
                                 weight = 1f

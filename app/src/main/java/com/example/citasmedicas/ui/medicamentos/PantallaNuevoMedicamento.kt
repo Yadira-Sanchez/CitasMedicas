@@ -434,8 +434,11 @@ fun PantallaNuevoMedicamento(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        estadoFecha.selectedDateMillis?.let {
-                            val fecha = Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
+                        estadoFecha.selectedDateMillis?.let { millis ->
+                            val fecha = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.of("UTC"))
+                                .toLocalDate()
+
                             modelo.fechaInicio = fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                         }
                         mostrarCalendarioInicio = false
@@ -461,8 +464,11 @@ fun PantallaNuevoMedicamento(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        estadoFecha.selectedDateMillis?.let {
-                            val fecha = Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
+                        estadoFecha.selectedDateMillis?.let { millis ->
+                            val fecha = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.of("UTC"))
+                                .toLocalDate()
+
                             modelo.fechaFin = fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                         }
                         mostrarCalendarioFin = false

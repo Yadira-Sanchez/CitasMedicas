@@ -30,7 +30,8 @@ import com.example.citasmedicas.ui.auth.PantallaRegistro
 import com.example.citasmedicas.ui.dashboard.PantallaInicio
 import com.example.citasmedicas.ui.medicamentos.*
 import com.example.citasmedicas.ui.citas.*
-import com.example.citasmedicas.data.Medicamento
+import com.example.citasmedicas.ui.historial.PantallaHistorial
+import com.example.citasmedicas.ui.perfil.PantallaPerfil
 import com.example.citasmedicas.util.GestorDeNotificaciones
 import com.google.firebase.auth.FirebaseAuth
 
@@ -38,7 +39,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Crear canal de notificaciones al iniciar
         GestorDeNotificaciones(this)
 
         enableEdgeToEdge()
@@ -46,21 +46,27 @@ class MainActivity : ComponentActivity() {
             CitasMedicasTheme {
                 val auth = FirebaseAuth.getInstance()
                 val navController = rememberNavController()
-                var usuarioFirebase by remember { mutableStateOf(auth.currentUser) }
-                var mostrarDialogoPermiso by remember { mutableStateOf(false) }
+                var usuarioFirebase by remember { 
+                    mutableStateOf(auth.currentUser) 
+                }
+                var mostrarDialogoPermiso by remember { 
+                    mutableStateOf(false) 
+                }
 
-                // Procesar navegación desde notificación (Deep Link o Extras)
                 LaunchedEffect(
                     key1 = intent
                 ) {
                     val pantalla = intent.getStringExtra("PANTALLA")
                     val medId = intent.getStringExtra("MEDICAMENTO_ID")
+                    val citaId = intent.getStringExtra("CITA_ID")
+
                     if (pantalla == "ALERTA" && medId != null) {
                         navController.navigate("alerta_medicamento/$medId")
+                    } else if (pantalla == "DETALLE_CITA" && citaId != null) {
+                        navController.navigate("detalle_cita/$citaId")
                     }
                 }
 
-                // Verificar permiso de alarmas exactas (Android 12+)
                 LaunchedEffect(
                     key1 = Unit
                 ) {
@@ -94,6 +100,7 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             startDestination = if (usuarioFirebase == null) "login" else "inicio"
                         ) {
+
                             composable(
                                 route = "login"
                             ) {
@@ -108,6 +115,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+
                             composable(
                                 route = "registro"
                             ) {
@@ -122,6 +130,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+
                             composable(
                                 route = "inicio"
                             ) {
@@ -130,13 +139,98 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate("nuevo_medicamento")
                                     },
                                     alVerMedicamentos = {
-                                        navController.navigate("medicamentos")
+                                        navController.navigate("medicamentos") {
+                                            popUpTo("inicio") { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
                                     },
                                     alVerCitas = {
-                                        navController.navigate("citas")
+                                        navController.navigate("citas") {
+                                            popUpTo("inicio") { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
                                     },
                                     alNuevaCita = {
                                         navController.navigate("nueva_cita")
+                                    },
+                                    alDetalleMedicamento = { id: String ->
+                                        navController.navigate("detalle_medicamento/$id")
+                                    },
+                                    alDetalleCita = { id: String ->
+                                        navController.navigate("detalle_cita/$id")
+                                    },
+                                    alVerHistorial = {
+                                        navController.navigate("historial")
+                                    },
+                                    alCerrarSesion = {
+                                        navController.navigate("perfil") {
+                                            popUpTo("inicio") { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = "medicamentos"
+                            ) {
+                                PantallaMedicamentos(
+                                    alAnadirMedicina = {
+                                        navController.navigate("nuevo_medicamento")
+                                    },
+                                    alNavegarA = { destino ->
+                                        navController.navigate(destino) {
+                                            popUpTo("inicio") { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    },
+                                    alVerDetalle = { id ->
+                                        navController.navigate("detalle_medicamento/$id")
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = "citas"
+                            ) {
+                                PantallaCitas(
+                                    alNavegarA = { ruta ->
+                                        navController.navigate(ruta) {
+                                            popUpTo("inicio") { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    },
+                                    alNuevaCita = {
+                                        navController.navigate("nueva_cita")
+                                    },
+                                    alDetalleCita = { idCita -> 
+                                        navController.navigate("detalle_cita/$idCita")
+                                    }
+
+                                )
+                            }
+
+                            composable(
+                                route = "historial"
+                            ) {
+                                PantallaHistorial(
+                                    alVolver = {
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = "perfil"
+                            ) {
+                                PantallaPerfil(
+                                    alVolver = {
+                                        navController.popBackStack()
                                     },
                                     alCerrarSesion = {
                                         auth.signOut()
@@ -146,47 +240,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
-                            composable(
-                                route = "medicamentos"
-                            ) {
-                                PantallaMedicamentos(
-                                    alAnadirMedicina = {
-                                        navController.navigate("nuevo_medicamento")
-                                    },
-                                    alNavegarA = { destino ->
-                                        if (destino == "perfil") {
-                                            auth.signOut()
-                                            navController.navigate("login") {
-                                                popUpTo("inicio") { inclusive = true }
-                                            }
-                                        } else {
-                                            navController.navigate(destino)
-                                        }
-                                    },
-                                    alVerDetalle = { id ->
-                                        navController.navigate("detalle_medicamento/$id")
-                                    }
-                                )
-                            }
-                            composable(
-                                route = "citas"
-                            ) {
-                                PantallaCitas(
-                                    alNavegarA = { destino ->
-                                        if (destino == "perfil") {
-                                            auth.signOut()
-                                            navController.navigate("login") {
-                                                popUpTo("inicio") { inclusive = true }
-                                            }
-                                        } else {
-                                            navController.navigate(destino)
-                                        }
-                                    },
-                                    alNuevaCita = {
-                                        navController.navigate("nueva_cita")
-                                    }
-                                )
-                            }
+
                             composable(
                                 route = "detalle_medicamento/{medicamentoId}",
                                 arguments = listOf(
@@ -204,6 +258,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+
                             composable(
                                 route = "editar_medicamento/{medicamentoId}",
                                 arguments = listOf(
@@ -221,18 +276,25 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+
                             composable(
-                                route = "nuevo_medicamento"
-                            ) {
-                                PantallaNuevoMedicamento(
-                                    alGuardar = {
-                                        navController.popBackStack()
+                                route = "detalle_cita/{citaId}",
+                                arguments = listOf(
+                                    navArgument("citaId") { type = NavType.StringType }
+                                )
+                            ) { backStackEntry ->
+                                val id = backStackEntry.arguments?.getString("citaId") ?: ""
+                                PantallaDetalleCita(
+                                    citaId = id,
+                                    alEditar = {
+                                        navController.navigate("editar_cita/$id")
                                     },
                                     alVolver = {
                                         navController.popBackStack()
                                     }
                                 )
                             }
+
                             composable(
                                 route = "nueva_cita"
                             ) {
@@ -245,6 +307,38 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+
+                            composable(
+                                route = "editar_cita/{citaId}",
+                                arguments = listOf(
+                                    navArgument("citaId") { type = NavType.StringType }
+                                )
+                            ) { backStackEntry ->
+                                val id = backStackEntry.arguments?.getString("citaId") ?: ""
+                                PantallaEditarCita(
+                                    citaId = id,
+                                    alActualizar = {
+                                        navController.popBackStack()
+                                    },
+                                    alVolver = {
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = "nuevo_medicamento"
+                            ) {
+                                PantallaNuevoMedicamento(
+                                    alGuardar = {
+                                        navController.popBackStack()
+                                    },
+                                    alVolver = {
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
+
                             composable(
                                 route = "alerta_medicamento/{medicamentoId}",
                                 arguments = listOf(
@@ -266,63 +360,38 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                    }
-                }
 
-                if (mostrarDialogoPermiso) {
-                    AlertDialog(
-                        onDismissRequest = {
-                            mostrarDialogoPermiso = false
-                        },
-                        title = {
-                            Text(
-                                text = "Permiso de Alarmas"
-                            )
-                        },
-                        text = {
-                            Text(
-                                text = "Para recordarte tus medicinas a tiempo, necesitamos el permiso de alarmas exactas."
-                            )
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    mostrarDialogoPermiso = false
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                        val intentPermiso = Intent(
-                                            Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
-                                            Uri.parse("package:$packageName")
-                                        )
-                                        startActivity(intentPermiso)
+                        if (mostrarDialogoPermiso) {
+                            AlertDialog(
+                                onDismissRequest = { mostrarDialogoPermiso = false },
+                                title = { Text("Permiso de Alarmas Exactas") },
+                                text = { Text("Para recibir notificaciones de tus medicamentos a la hora exacta, necesitamos este permiso.") },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            mostrarDialogoPermiso = false
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                                val intent = Intent().apply {
+                                                    action = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
+                                                    data = Uri.parse("package:${packageName}")
+                                                }
+                                                startActivity(intent)
+                                            }
+                                        }
+                                    ) {
+                                        Text("Ir a Ajustes")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { mostrarDialogoPermiso = false }) {
+                                        Text("Ahora no")
                                     }
                                 }
-                            ) {
-                                Text(
-                                    text = "Ir a Ajustes"
-                                )
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(
-                                onClick = {
-                                    mostrarDialogoPermiso = false
-                                }
-                            ) {
-                                Text(
-                                    text = "Cancelar"
-                                )
-                            }
+                            )
                         }
-                    )
+                    }
                 }
             }
         }
-    }
-
-    override fun onNewIntent(
-        intent: Intent
-    ) {
-        super.onNewIntent(intent)
-        setIntent(intent)
     }
 }

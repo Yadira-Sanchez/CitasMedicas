@@ -14,11 +14,10 @@ import com.example.citasmedicas.MainActivity
 class GestorDeNotificaciones(private val context: Context) {
 
     companion object {
-        const val CANAL_ID = "recordatorios_medicamentos"
-        const val CANAL_NOMBRE = "Recordatorios de Medicamentos"
+        const val CANAL_ID = "recordatorios_vitalis"
+        const val CANAL_NOMBRE = "Recordatorios Vitalis"
         const val ACCION_CONFIRMAR = "com.example.citasmedicas.CONFIRMAR_TOMA"
         const val ACCION_POSPONER = "com.example.citasmedicas.POSPONER_TOMA"
-        const val ACCION_OMITIR = "com.example.citasmedicas.OMITIR_TOMA"
     }
 
     init {
@@ -38,7 +37,7 @@ class GestorDeNotificaciones(private val context: Context) {
                 CANAL_NOMBRE,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notificaciones para recordarte tomar tu medicina"
+                description = "Notificaciones para medicamentos y citas médicas"
                 enableLights(true)
                 enableVibration(true)
                 setSound(soundUri, audioAttributes)
@@ -119,6 +118,42 @@ class GestorDeNotificaciones(private val context: Context) {
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(idMedicamento.hashCode(), builder.build())
+    }
+
+    fun mostrarNotificacionCita(
+        idCita: String,
+        motivo: String,
+        lugar: String,
+        hora: String
+    ) {
+        val intentPrincipal = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("PANTALLA", "DETALLE_CITA")
+            putExtra("CITA_ID", idCita)
+        }
+
+        val pendingIntentPrincipal = PendingIntent.getActivity(
+            context,
+            idCita.hashCode(),
+            intentPrincipal,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+
+        val builder = NotificationCompat.Builder(context, CANAL_ID)
+            .setSmallIcon(android.R.drawable.ic_menu_my_calendar)
+            .setContentTitle("Recordatorio de Cita Médica")
+            .setContentText("$motivo en $lugar a las $hora")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setSound(soundUri)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntentPrincipal)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(idCita.hashCode(), builder.build())
     }
 
     fun cancelarNotificacion(idNotificacion: Int) {

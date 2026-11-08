@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import com.example.citasmedicas.data.CitaMedica
 import com.example.citasmedicas.data.Medicamento
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -15,6 +16,10 @@ interface AlarmScheduler {
     fun programar(medicamento: Medicamento)
     fun cancelar(medicamento: Medicamento)
     fun posponer(medicamento: Medicamento, minutos: Int)
+    
+    // Métodos para Citas Médicas
+    fun programarCita(cita: CitaMedica)
+    fun cancelarCita(cita: CitaMedica)
 }
 
 class AndroidAlarmScheduler(private val context: Context) : AlarmScheduler {
@@ -136,6 +141,79 @@ class AndroidAlarmScheduler(private val context: Context) : AlarmScheduler {
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             medicamento.id.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
+    }
+
+    // --- Implementación para Citas ---
+
+    override fun programarCita(
+        cita: CitaMedica
+    ) {
+        if (!cita.recordatorioActivo) return
+
+        val intent = Intent(
+            context,
+            ReceptorDeNotificacion::class.java
+        ).apply {
+            action = "ALERTA_CITA"
+            putExtra("CITA_ID", cita.id)
+            putExtra("CITA_MOTIVO", cita.especialidad)
+            putExtra("CITA_LUGAR", cita.lugar)
+            putExtra("CITA_HORA", cita.hora)
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            cita.id.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val horaCita = LocalTime.parse(cita.hora)
+        val fechaCita = LocalDate.parse(
+            cita.fecha,
+            DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        )
+
+        // Programar exactamente a la hora de la cita (o X minutos antes si se deseara)
+        val triggerTime = LocalDateTime.of(
+            fechaCita,
+            horaCita
+        ).atZone(
+            ZoneId.systemDefault()
+        ).toInstant().toEpochMilli()
+
+        // Solo programar si la cita es en el futuro
+        if (triggerTime > System.currentTimeMillis()) {
+            try {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+            } catch (e: SecurityException) {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+            }
+        }
+    }
+
+    override fun cancelarCita(
+        cita: CitaMedica
+    ) {
+        val intent = Intent(
+            context,
+            ReceptorDeNotificacion::class.java
+        )
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            cita.id.hashCode(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

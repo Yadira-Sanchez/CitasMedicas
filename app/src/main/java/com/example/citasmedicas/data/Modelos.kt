@@ -35,3 +35,21 @@ data class CitaMedica(
     val notas: String = "",
     val creadoEn: Timestamp = Timestamp.now()
 )
+
+// Datos para el historial (RF19)
+data class RegistroHistorial(
+    val id: String = "",
+    val nombreActividad: String = "",
+    val tipo: String = "",   // "MEDICAMENTO" o "CITA"
+    val accion: String = "", // "Tomado", "Omitido", "Pasado"
+    val fecha: String = "",  // DD/MM/YYYY
+    val hora: String = "",   // HH:MM
+    val timestamp: Timestamp = Timestamp.now()
+)
+
+// Datos para el chatbot (RF23)
+data class MensajeChat(
+    val texto: String = "",
+    val esDelUsuario: Boolean = true,
+    val timestamp: Long = System.currentTimeMillis()
+)

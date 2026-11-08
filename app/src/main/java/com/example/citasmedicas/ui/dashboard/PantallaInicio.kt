@@ -3,7 +3,6 @@ package com.example.citasmedicas.ui.dashboard
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -18,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,7 +27,6 @@ import com.example.citasmedicas.ui.citas.TarjetaCitaItem
 import com.example.citasmedicas.ui.theme.AzulPrimario
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -39,6 +38,9 @@ fun PantallaInicio(
     alVerMedicamentos: () -> Unit,
     alVerCitas: () -> Unit,
     alNuevaCita: () -> Unit,
+    alDetalleMedicamento: (String) -> Unit,
+    alDetalleCita: (String) -> Unit,
+    alVerHistorial: () -> Unit,
     alCerrarSesion: () -> Unit
 ) {
     val uiState = viewModel.uiState
@@ -48,11 +50,13 @@ fun PantallaInicio(
     }
 
     LaunchedEffect(
-        key1 = userId,
+        key1 = userId, 
         key2 = uiState.fechaSeleccionada
     ) {
         if (userId != null) {
-            viewModel.cargarCitasPorFecha(uiState.fechaSeleccionada)
+            viewModel.cargarCitasPorFecha(
+                fecha = uiState.fechaSeleccionada
+            )
         }
     }
 
@@ -73,16 +77,16 @@ fun PantallaInicio(
                 NavigationBarItem(
                     selected = true,
                     onClick = { },
-                    icon = {
+                    icon = { 
                         Icon(
-                            imageVector = Icons.Default.Home,
+                            imageVector = Icons.Default.Home, 
                             contentDescription = "Inicio"
-                        )
+                        ) 
                     },
-                    label = {
+                    label = { 
                         Text(
                             text = "Inicio"
-                        )
+                        ) 
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = AzulPrimario,
@@ -93,46 +97,46 @@ fun PantallaInicio(
                 NavigationBarItem(
                     selected = false,
                     onClick = alVerMedicamentos,
-                    icon = {
+                    icon = { 
                         Icon(
-                            imageVector = Icons.Default.Medication,
+                            imageVector = Icons.Default.Medication, 
                             contentDescription = "Medicinas"
-                        )
+                        ) 
                     },
-                    label = {
+                    label = { 
                         Text(
                             text = "Medicinas"
-                        )
+                        ) 
                     }
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = alVerCitas,
-                    icon = {
+                    icon = { 
                         Icon(
-                            imageVector = Icons.Default.Event,
+                            imageVector = Icons.Default.Event, 
                             contentDescription = "Citas"
-                        )
+                        ) 
                     },
-                    label = {
+                    label = { 
                         Text(
                             text = "Citas"
-                        )
+                        ) 
                     }
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = alCerrarSesion,
-                    icon = {
+                    icon = { 
                         Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Perfil"
-                        )
+                            imageVector = Icons.Default.Person, 
+                            contentDescription = "Salir"
+                        ) 
                     },
-                    label = {
+                    label = { 
                         Text(
-                            text = "Perfil"
-                        )
+                            text = "Salir"
+                        ) 
                     }
                 )
             }
@@ -141,44 +145,53 @@ fun PantallaInicio(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(
+                        horizontal = 24.dp
+                    )
             ) {
-                // Botón del asistente/robot (Izquierda)
                 FloatingActionButton(
-                    onClick = { /* RF23: Asistente IA */ },
+                    onClick = { /* Asistente IA */ },
                     containerColor = Color(0xFF1B3E5F),
                     contentColor = Color.White,
                     shape = CircleShape,
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .size(56.dp)
+                        .align(
+                            alignment = Alignment.BottomStart
+                        )
+                        .size(
+                            size = 56.dp
+                        )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.SmartToy,
+                        imageVector = Icons.Default.SmartToy, 
                         contentDescription = "Asistente IA"
                     )
                 }
 
-                // Botón flotante (+) Turquesa (Derecha)
                 Box(
-                    modifier = Modifier.align(Alignment.BottomEnd)
+                    modifier = Modifier.align(
+                        alignment = Alignment.BottomEnd
+                    )
                 ) {
                     FloatingActionButton(
                         onClick = { 
                             menuAbierto = true 
                         },
-                        containerColor = Color(0xFF4DD0E1), // Turquesa
+                        containerColor = Color(0xFF4DD0E1),
                         contentColor = Color.White,
                         shape = CircleShape,
-                        modifier = Modifier.size(56.dp)
+                        modifier = Modifier.size(
+                            size = 56.dp
+                        )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Agregar",
-                            modifier = Modifier.size(32.dp)
+                            imageVector = Icons.Default.Add, 
+                            contentDescription = "Agregar", 
+                            modifier = Modifier.size(
+                                size = 32.dp
+                            )
                         )
                     }
-
                     DropdownMenu(
                         expanded = menuAbierto,
                         onDismissRequest = { 
@@ -186,37 +199,54 @@ fun PantallaInicio(
                         }
                     ) {
                         DropdownMenuItem(
-                            text = {
+                            text = { 
                                 Text(
                                     text = "Agregar Medicamento"
-                                )
+                                ) 
                             },
                             onClick = {
                                 menuAbierto = false
                                 alAgregarMedicamento()
                             },
-                            leadingIcon = {
+                            leadingIcon = { 
                                 Icon(
-                                    imageVector = Icons.Default.Medication,
+                                    imageVector = Icons.Default.Medication, 
                                     contentDescription = null
-                                )
+                                ) 
                             }
                         )
                         DropdownMenuItem(
-                            text = {
+                            text = { 
                                 Text(
                                     text = "Agregar Cita"
-                                )
+                                ) 
                             },
                             onClick = {
                                 menuAbierto = false
                                 alNuevaCita()
                             },
-                            leadingIcon = {
+                            leadingIcon = { 
                                 Icon(
-                                    imageVector = Icons.Default.Event,
+                                    imageVector = Icons.Default.Event, 
                                     contentDescription = null
-                                )
+                                ) 
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { 
+                                Text(
+                                    text = "Ver Historial"
+                                ) 
+                            },
+                            onClick = {
+                                menuAbierto = false
+                                alVerHistorial()
+                            },
+                            leadingIcon = { 
+                                Icon(
+                                    imageVector = Icons.Default.History, 
+                                    contentDescription = null
+                                ) 
                             }
                         )
                     }
@@ -227,18 +257,26 @@ fun PantallaInicio(
     ) { padding ->
         LazyColumn(
             modifier = Modifier
-                .padding(paddingValues = padding)
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(space = 20.dp)
-        ) {
-            item {
-                Spacer(
-                    modifier = Modifier.height(height = 16.dp)
+                .padding(
+                    paddingValues = padding
                 )
+                .fillMaxSize()
+                .padding(
+                    horizontal = 20.dp
+                ),
+            verticalArrangement = Arrangement.spacedBy(
+                space = 20.dp
+            )
+        ) {
+            item { 
+                Spacer(
+                    modifier = Modifier.height(
+                        height = 16.dp
+                    )
+                ) 
             }
 
-            // Encabezado del Usuario
+            // Encabezado
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -247,8 +285,8 @@ fun PantallaInicio(
                 ) {
                     Column {
                         Text(
-                            text = "Hola,",
-                            style = MaterialTheme.typography.titleMedium,
+                            text = "Hola,", 
+                            style = MaterialTheme.typography.titleMedium, 
                             color = Color.Gray
                         )
                         Text(
@@ -258,305 +296,151 @@ fun PantallaInicio(
                             color = Color(0xFF1A1C1E)
                         )
                     }
-                    
-                    Box {
-                        Surface(
-                            shape = CircleShape,
-                            color = Color(0xFF03A9F4),
-                            modifier = Modifier.size(size = 52.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.padding(all = 8.dp)
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFF03A9F4),
+                        modifier = Modifier.size(
+                            size = 52.dp
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person, 
+                            contentDescription = null, 
+                            tint = Color.White, 
+                            modifier = Modifier.padding(
+                                all = 8.dp
                             )
-                        }
-                        // Punto indicador de estado
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .background(
-                                    color = Color(0xFF4CAF50),
-                                    shape = CircleShape
-                                )
-                                .border(
-                                    width = 2.dp,
-                                    color = Color.White,
-                                    shape = CircleShape
-                                )
-                                .align(Alignment.BottomEnd)
                         )
                     }
                 }
             }
 
-            // Barra de Búsqueda
             item {
                 OutlinedTextField(
                     value = "",
                     onValueChange = { },
-                    placeholder = {
+                    placeholder = { 
                         Text(
-                            text = "Buscar medicamentos o citas...",
+                            text = "Buscar medicamentos o citas...", 
                             color = Color.LightGray
-                        )
+                        ) 
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            color = Color.White,
+                            color = Color.White, 
                             shape = RoundedCornerShape(16.dp)
                         ),
-                    shape = RoundedCornerShape(size = 16.dp),
-                    leadingIcon = {
+                    shape = RoundedCornerShape(16.dp),
+                    leadingIcon = { 
                         Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
+                            imageVector = Icons.Default.Search, 
+                            contentDescription = null, 
                             tint = Color.Gray
-                        )
+                        ) 
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
-                        focusedBorderColor = AzulPrimario
-                    ),
-                    singleLine = true
+                        focusedBorderColor = AzulPrimario.copy(alpha = 0.5f),
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    )
                 )
             }
 
-            // Sección Calendario
+            // Calendario Superior (RF12)
             item {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Calendario",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Ver todo",
-                            color = AzulPrimario,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.clickable { alVerCitas() }
-                        )
-                    }
-                    Spacer(
-                        modifier = Modifier.height(height = 12.dp)
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(
+                        space = 12.dp
+                    ),
+                    contentPadding = PaddingValues(
+                        vertical = 8.dp
                     )
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(space = 10.dp)
-                    ) {
-                        items(items = uiState.diasSemana) { fecha ->
-                            DiaItem(
-                                fecha = fecha,
-                                estaSeleccionado = fecha == uiState.fechaSeleccionada,
-                                alSeleccionar = { viewModel.seleccionarFecha(fecha) }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Sección "Tomas de Hoy"
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Tomas de Hoy",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(
-                        modifier = Modifier.width(width = 8.dp)
-                    )
-                    Surface(
-                        color = Color(0xFFE3F2FD),
-                        shape = RoundedCornerShape(size = 12.dp)
-                    ) {
-                        Text(
-                            text = "${uiState.listaMedicamentos.size} hoy",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = AzulPrimario,
-                            fontWeight = FontWeight.Bold
+                    items(
+                        items = uiState.diasSemana
+                    ) { fecha ->
+                        DiaItem(
+                            fecha = fecha,
+                            estaSeleccionado = fecha == uiState.fechaSeleccionada,
+                            alSeleccionar = { 
+                                viewModel.seleccionarFecha(
+                                    fecha = fecha
+                                ) 
+                            }
                         )
                     }
-                    Spacer(
-                        modifier = Modifier.weight(weight = 1f)
-                    )
-                    val formatter = DateTimeFormatter.ofPattern("EEEE, d MMM", Locale.forLanguageTag("es-ES"))
-                    Text(
-                        text = uiState.fechaSeleccionada.format(formatter),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
                 }
             }
 
-            if (uiState.listaMedicamentos.isEmpty()) {
-                item {
-                    Text(
-                        text = "No tienes medicamentos programados.",
-                        color = Color.Gray,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            } else {
-                items(items = uiState.listaMedicamentos) { med ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                medicamentoSeleccionado = med
-                                mostrarBottomSheet = true
-                            },
-                        shape = RoundedCornerShape(size = 16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(all = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(size = 48.dp)
-                                    .background(
-                                        color = Color(0xFFE1F5FE),
-                                        shape = RoundedCornerShape(size = 12.dp)
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                val icon = when(med.tipo) {
-                                    "Gotas" -> Icons.Default.WaterDrop
-                                    "Jarabe" -> Icons.Default.MedicalServices
-                                    else -> Icons.Default.Medication
-                                }
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = null,
-                                    tint = AzulPrimario,
-                                    modifier = Modifier.size(size = 24.dp)
-                                )
-                            }
-
-                            Spacer(
-                                modifier = Modifier.width(width = 16.dp)
-                            )
-
-                            Column(
-                                modifier = Modifier.weight(weight = 1f)
-                            ) {
-                                Text(
-                                    text = med.nombre,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = med.dosis,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Gray
-                                    )
-                                    if (!med.yaFueTomado) {
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Surface(
-                                            color = Color(0xFFFFF9C4),
-                                            shape = RoundedCornerShape(size = 8.dp)
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Outlined.Schedule,
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(size = 12.dp),
-                                                    tint = Color(0xFFF57C00)
-                                                )
-                                                Text(
-                                                    text = " ${med.horaToma}",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = Color(0xFFF57C00),
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
-                                        }
-                                    } else {
-                                        Text(
-                                            text = " • ${med.horaToma}",
-                                            color = Color.Gray,
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Botón de estado circular
-                            if (med.yaFueTomado) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = Color(0xFF4DB6AC), // Verde menta
-                                    modifier = Modifier.size(size = 32.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = "Completado",
-                                        tint = Color.White,
-                                        modifier = Modifier.padding(all = 6.dp)
-                                    )
-                                }
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .size(size = 32.dp)
-                                        .border(
-                                            width = 2.dp,
-                                            color = Color.LightGray.copy(alpha = 0.5f),
-                                            shape = CircleShape
-                                        )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Citas para este día
+            // Actividades del día (Vista Unificada RF12)
             item {
                 Text(
-                    text = "Citas para este día",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = "Actividades del día", 
+                    style = MaterialTheme.typography.titleLarge, 
                     fontWeight = FontWeight.Bold
                 )
             }
 
-            if (uiState.listaCitasDelDia.isEmpty()) {
+            val sinActividades = uiState.listaCitasDelDia.isEmpty() && 
+                               uiState.listaMedicamentosDelDia.isEmpty()
+
+            if (sinActividades) {
                 item {
-                    Text(
-                        text = "No tienes citas para la fecha seleccionada.",
-                        color = Color.Gray,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                vertical = 32.dp
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No hay actividades para esta fecha", 
+                            color = Color.Gray, 
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             } else {
-                items(items = uiState.listaCitasDelDia) { cita ->
-                    TarjetaCitaItem(cita = cita)
+                // Listado de Medicamentos con nuevo diseño profesional
+                items(
+                    items = uiState.listaMedicamentosDelDia
+                ) { med ->
+                    TarjetaMedicamentoItem(
+                        med = med,
+                        onClick = {
+                            medicamentoSeleccionado = med
+                            mostrarBottomSheet = true
+                        },
+                        onTomarClick = {
+                            viewModel.actualizarEstadoMedicamento(
+                                medicamento = med,
+                                nuevoEstado = if (med.yaFueTomado) "Pasar" else "Tomar"
+                            )
+                        }
+                    )
                 }
             }
-
-            item {
-                Spacer(
-                    modifier = Modifier.height(height = 100.dp)
+            // Listado de Citas Médicas
+            items(
+                items = uiState.listaCitasDelDia
+            ) { cita ->
+                TarjetaCitaItem(
+                    cita = cita,
+                    onClick = {
+                        alDetalleCita(cita.id)
+                    }
                 )
+            }
+
+            item { 
+                Spacer(
+                    modifier = Modifier.height(
+                        height = 100.dp
+                    )
+                ) 
             }
         }
     }
@@ -564,52 +448,101 @@ fun PantallaInicio(
     if (mostrarBottomSheet && medicamentoSeleccionado != null) {
         val med = medicamentoSeleccionado!!
         ModalBottomSheet(
-            onDismissRequest = { mostrarBottomSheet = false },
+            onDismissRequest = { 
+                mostrarBottomSheet = false 
+            },
             sheetState = estadoSheet,
             containerColor = Color.White
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(space = 16.dp),
+                    .padding(
+                        horizontal = 24.dp, 
+                        vertical = 32.dp
+                    ),
+                verticalArrangement = Arrangement.spacedBy(
+                    space = 16.dp
+                ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = med.nombre,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
+                    text = med.nombre, 
+                    style = MaterialTheme.typography.headlineSmall, 
+                    fontWeight = FontWeight.Bold, 
                     color = AzulPrimario
                 )
                 Text(
-                    text = "¿Qué acción deseas realizar para esta toma (${med.horaToma})?",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "¿Qué acción deseas realizar para esta toma (${med.horaToma})?", 
+                    style = MaterialTheme.typography.bodyMedium, 
                     color = Color.Gray
                 )
-                Spacer(modifier = Modifier.height(height = 8.dp))
+                Spacer(
+                    modifier = Modifier.height(
+                        height = 8.dp
+                    )
+                )
                 Button(
                     onClick = {
-                        viewModel.actualizarEstadoMedicamento(med, "Tomar")
+                        viewModel.actualizarEstadoMedicamento(
+                            medicamento = med, 
+                            nuevoEstado = "Tomar"
+                        )
                         mostrarBottomSheet = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4DB6AC)),
-                    modifier = Modifier.fillMaxWidth().height(height = 56.dp),
-                    shape = RoundedCornerShape(size = 16.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4DB6AC)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(
+                            height = 56.dp
+                        ),
+                    shape = RoundedCornerShape(
+                        size = 16.dp
+                    )
                 ) {
-                    Text(text = "Tomar", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        text = "Tomar", 
+                        fontWeight = FontWeight.Bold, 
+                        fontSize = 16.sp
+                    )
                 }
                 Button(
                     onClick = {
-                        viewModel.actualizarEstadoMedicamento(med, "Pasar")
+                        viewModel.actualizarEstadoMedicamento(
+                            medicamento = med, 
+                            nuevoEstado = "Pasar"
+                        )
                         mostrarBottomSheet = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
-                    modifier = Modifier.fillMaxWidth().height(height = 56.dp),
-                    shape = RoundedCornerShape(size = 16.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.LightGray
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(
+                            height = 56.dp
+                        ),
+                    shape = RoundedCornerShape(
+                        size = 16.dp
+                    )
                 ) {
-                    Text(text = "Pasar", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                    Text(
+                        text = "Pasar", 
+                        fontWeight = FontWeight.Bold, 
+                        fontSize = 16.sp, 
+                        color = Color.Black
+                    )
                 }
-
+                TextButton(
+                    onClick = {
+                        mostrarBottomSheet = false
+                        alDetalleMedicamento(med.id)
+                    }
+                ) {
+                    Text(text = "Ver detalles completos")
+                }
             }
         }
     }
@@ -622,21 +555,43 @@ fun DiaItem(
     alSeleccionar: () -> Unit
 ) {
     val localeEs = Locale.forLanguageTag("es-ES")
-    val diaNombre = fecha.dayOfWeek.getDisplayName(TextStyle.SHORT, localeEs)
+    val diaNombre = fecha.dayOfWeek.getDisplayName(
+        TextStyle.SHORT, 
+        localeEs
+    )
     val diaNumero = fecha.dayOfMonth.toString()
 
     Card(
         onClick = alSeleccionar,
-        modifier = Modifier.width(width = 64.dp).height(height = 80.dp),
-        shape = RoundedCornerShape(size = 16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (estaSeleccionado) Color(0xFF0D47A1) else Color.White
+        modifier = Modifier
+            .width(
+                width = 64.dp
+            )
+            .height(
+                height = 80.dp
+            ),
+        shape = RoundedCornerShape(
+            size = 16.dp
         ),
-        border = if (!estaSeleccionado) BorderStroke(width = 1.dp, color = Color.LightGray.copy(alpha = 0.2f)) else null,
-        elevation = CardDefaults.cardElevation(defaultElevation = if (estaSeleccionado) 4.dp else 0.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = if (estaSeleccionado) AzulPrimario else Color.White
+        ),
+        border = if (!estaSeleccionado) {
+            BorderStroke(
+                width = 1.dp, 
+                color = Color.LightGray.copy(alpha = 0.2f)
+            )
+        } else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (estaSeleccionado) 8.dp else 0.dp
+        )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    vertical = 12.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -655,11 +610,353 @@ fun DiaItem(
             if (estaSeleccionado) {
                 Box(
                     modifier = Modifier
-                        .size(size = 4.dp)
-                        .background(color = Color.White, shape = CircleShape)
+                        .size(
+                            size = 4.dp
+                        )
+                        .background(
+                            color = Color.White, 
+                            shape = CircleShape
+                        )
                 )
             } else {
-                Spacer(modifier = Modifier.height(height = 4.dp))
+                Spacer(
+                    modifier = Modifier.height(
+                        height = 4.dp
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TarjetaMedicamentoItem(
+    med: Medicamento,
+    onClick: () -> Unit,
+    onTomarClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(
+            size = 16.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        ),
+        onClick = onClick
+    ) {
+        Column {
+            // Línea superior de color para identidad visual profesional
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(
+                        height = 3.dp
+                    )
+                    .background(
+                        color = if (med.yaFueTomado) Color(0xFF4CAF50) else AzulPrimario
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .padding(
+                        all = 16.dp
+                    )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Contenedor del Icono Principal (Estilo Moderno)
+                    Surface(
+                        shape = RoundedCornerShape(
+                            size = 12.dp
+                        ),
+                        color = if (med.yaFueTomado) Color(0xFFE8F5E9) else Color(0xFFF0F7FF),
+                        modifier = Modifier
+                            .size(
+                                size = 52.dp
+                            )
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Medication,
+                                contentDescription = null,
+                                tint = if (med.yaFueTomado) Color(0xFF2E7D32) else AzulPrimario,
+                                modifier = Modifier
+                                    .size(
+                                        size = 26.dp
+                                    )
+                            )
+                        }
+                    }
+
+                    Spacer(
+                        modifier = Modifier
+                            .width(
+                                width = 12.dp
+                            )
+                    )
+
+                    // Textos Centrales Destacados
+                    Column(
+                        modifier = Modifier
+                            .weight(
+                                weight = 1f
+                            )
+                    ) {
+                        Text(
+                            text = med.tipo.uppercase(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray,
+                            letterSpacing = 0.5.sp,
+                            fontFamily = FontFamily.Default
+                        )
+                        Text(
+                            text = med.nombre,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1A1C1E),
+                            fontFamily = FontFamily.Default
+                        )
+                        Text(
+                            text = "● Toma programada",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (med.yaFueTomado) Color(0xFF2E7D32) else Color(0xFFF57C00),
+                            fontFamily = FontFamily.Default
+                        )
+                    }
+
+                    // Etiqueta de Estado (Badge)
+                    Surface(
+                        color = if (med.yaFueTomado) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
+                        shape = RoundedCornerShape(
+                            size = 12.dp
+                        )
+                    ) {
+                        Text(
+                            text = if (med.yaFueTomado) "Tomado" else "Pendiente",
+                            modifier = Modifier
+                                .padding(
+                                    horizontal = 8.dp,
+                                    vertical = 4.dp
+                                ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (med.yaFueTomado) Color(0xFF2E7D32) else Color(0xFFE65100),
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Default
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier
+                            .width(
+                                width = 8.dp
+                            )
+                    )
+
+                    // Checkbox de Acción Rápida (Simetría con Citas)
+                    IconButton(
+                        onClick = onTomarClick,
+                        modifier = Modifier
+                            .size(
+                                size = 32.dp
+                            )
+                    ) {
+                        if (med.yaFueTomado) {
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF4DB6AC),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Tomado",
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .padding(
+                                            all = 6.dp
+                                        )
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color.LightGray.copy(
+                                            alpha = 0.5f
+                                        ),
+                                        shape = CircleShape
+                                    )
+                            )
+                        }
+                    }
+                }
+
+                Spacer(
+                    modifier = Modifier
+                        .height(
+                            height = 16.dp
+                        )
+                )
+
+                // Fila Inferior con Contenedores de Información de Apoyo
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        space = 8.dp
+                    )
+                ) {
+                    // Contenedor Dosis
+                    Surface(
+                        modifier = Modifier
+                            .weight(
+                                weight = 1f
+                            ),
+                        color = Color(0xFFF5F7FA),
+                        shape = RoundedCornerShape(
+                            size = 8.dp
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(
+                                    all = 10.dp
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Healing,
+                                contentDescription = null,
+                                tint = AzulPrimario,
+                                modifier = Modifier
+                                    .size(
+                                        size = 16.dp
+                                    )
+                            )
+                            Spacer(
+                                modifier = Modifier
+                                    .width(
+                                        width = 8.dp
+                                    )
+                            )
+                            Text(
+                                text = med.dosis,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+                    }
+
+                    // Contenedor Frecuencia
+                    Surface(
+                        modifier = Modifier
+                            .weight(
+                                weight = 1f
+                            ),
+                        color = Color(0xFFF5F7FA),
+                        shape = RoundedCornerShape(
+                            size = 8.dp
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(
+                                    all = 10.dp
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Autorenew,
+                                contentDescription = null,
+                                tint = AzulPrimario,
+                                modifier = Modifier
+                                    .size(
+                                        size = 16.dp
+                                    )
+                            )
+                            Spacer(
+                                modifier = Modifier
+                                    .width(
+                                        width = 8.dp
+                                    )
+                            )
+                            Text(
+                                text = med.frecuencia,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+                    }
+                }
+
+                Spacer(
+                    modifier = Modifier
+                        .height(
+                            height = 12.dp
+                        )
+                )
+
+                // Fila de Hora Resaltada (Estilo profesional)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        color = if (!med.yaFueTomado) Color(0xFFFFF3E0) else Color(0xFFF5F7FA),
+                        shape = RoundedCornerShape(
+                            size = 8.dp
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(
+                                    horizontal = 8.dp,
+                                    vertical = 4.dp
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Schedule,
+                                contentDescription = null,
+                                tint = if (!med.yaFueTomado) Color(0xFFE65100) else Color.Gray,
+                                modifier = Modifier
+                                    .size(
+                                        size = 16.dp
+                                    )
+                            )
+                            Spacer(
+                                modifier = Modifier
+                                    .width(
+                                        width = 4.dp
+                                    )
+                            )
+                            Text(
+                                text = "${med.horaToma} hrs",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (!med.yaFueTomado) Color(0xFFE65100) else Color.Gray,
+                                fontFamily = FontFamily.Default
+                            )
+                        }
+                    }
+                }
             }
         }
     }

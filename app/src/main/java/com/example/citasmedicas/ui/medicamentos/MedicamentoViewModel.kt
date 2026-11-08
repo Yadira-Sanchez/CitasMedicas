@@ -41,7 +41,7 @@ class MedicamentoViewModel(
     var eliminacionExitosa by mutableStateOf(false)
     var cargando by mutableStateOf(false)
 
-    // Estado para la consulta de detalle (RF14)
+    // Estado para la consulta de detalle
     var medicamentoSeleccionado by mutableStateOf<Medicamento?>(null)
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -57,7 +57,7 @@ class MedicamentoViewModel(
             else -> "Escribe la dosis"
         }
 
-    // RF14: Obtener un medicamento por ID desde Firestore
+    // RF14: Obtener un medicamento por ID
     fun obtenerMedicamentoPorId(
         id: String
     ) {
@@ -72,36 +72,55 @@ class MedicamentoViewModel(
             }
     }
 
-    // RF13: Acciones de la Pantalla de Alerta
-    fun confirmarTomaAlerta(
-        medicamento: Medicamento, 
+    // RF17: Confirmar Toma del medicamento en Firestore
+    fun confirmarToma(
+        medicamentoId: String,
         alTerminar: () -> Unit
     ) {
         val uid = auth.currentUser?.uid ?: return
+        cargando = true
+        
         firestore.collection("usuarios")
             .document(uid)
             .collection("medicamentos")
-            .document(medicamento.id)
-            .update("yaFueTomado", true)
+            .document(medicamentoId)
+            .update(
+                "yaFueTomado", 
+                true
+            )
             .addOnSuccessListener {
+                cargando = false
                 mensajeExito = "¡Toma registrada con éxito!"
                 alTerminar()
             }
+            .addOnFailureListener {
+                cargando = false
+                mensajeError = "No se pudo registrar la toma."
+            }
     }
 
-    fun posponerTomaAlerta(
-        medicamento: Medicamento, 
+    // RF17: Omitir la toma actual
+    fun omitirToma(
+        medicamentoId: String,
         alTerminar: () -> Unit
     ) {
-        alarmScheduler.posponer(medicamento, 10)
-        mensajeExito = "Recordatorio pospuesto 10 minutos"
+        // En esta implementación descartamos el aviso sin alterar esquema futuro
+        mensajeExito = "Dosis omitida para este horario."
         alTerminar()
     }
 
-    fun omitirTomaAlerta(
+    // RF18: Posponer Recordatorio (Alarma Nativa con AlarmManager)
+    fun posponerRecordatorio(
+        medicamento: Medicamento,
+        minutos: Int = 10,
         alTerminar: () -> Unit
     ) {
-        mensajeExito = "Dosis omitida"
+        // Reprograma la alarma nativa del sistema
+        alarmScheduler.posponer(
+            medicamento = medicamento,
+            minutos = minutos
+        )
+        mensajeExito = "Recordatorio pospuesto $minutos minutos."
         alTerminar()
     }
 
@@ -147,9 +166,7 @@ class MedicamentoViewModel(
         val opcionesFijas = listOf("Cada 4 horas", "Cada 6 horas", "Cada 8 horas", "Cada 12 horas", "Una vez al día")
         if (medicamento.frecuencia !in opcionesFijas) {
             frecuencia = "Personalizar"
-            intervaloPersonalizado = medicamento.frecuencia
-                .replace("Cada ", "")
-                .replace(" horas", "")
+            intervaloPersonalizado = medicamento.frecuencia.replace("Cada ", "").replace(" horas", "")
         } else {
             frecuencia = medicamento.frecuencia
             intervaloPersonalizado = ""

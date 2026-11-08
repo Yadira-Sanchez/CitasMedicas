@@ -11,11 +11,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 data class DashboardUiState(
     val nombreUsuario: String = "Cargando...",
     val fechaSeleccionada: LocalDate = LocalDate.now(),
-    val listaMedicamentos: List<Medicamento> = emptyList(),
+    val listaMedicamentos: List<Medicamento> = emptyList(), // Lista completa para otras pantallas
+    val listaMedicamentosDelDia: List<Medicamento> = emptyList(), // Filtrada para el calendario
     val listaCitasDelDia: List<CitaMedica> = emptyList(),
     val diasSemana: List<LocalDate> = emptyList()
 )
@@ -30,6 +32,7 @@ class DashboardViewModel : ViewModel() {
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
     private var listenerCitas: ListenerRegistration? = null
     private var listenerMedicamentos: ListenerRegistration? = null
+    private val formatoFecha = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
     init {
         generarSemana()
@@ -78,6 +81,9 @@ class DashboardViewModel : ViewModel() {
                 uiState = uiState.copy(
                     listaMedicamentos = medicamentos
                 )
+                filtrarMedicamentosPorFecha(
+                    fecha = uiState.fechaSeleccionada
+                )
             }
         }
     }
@@ -86,11 +92,7 @@ class DashboardViewModel : ViewModel() {
         fecha: LocalDate
     ) {
         val uid = auth.currentUser?.uid ?: return
-        val fechaString = fecha.format(
-            DateTimeFormatter.ofPattern(
-                "dd/MM/yyyy"
-            )
-        )
+        val fechaString = fecha.format(formatoFecha)
 
         listenerCitas?.remove()
         
@@ -119,6 +121,45 @@ class DashboardViewModel : ViewModel() {
         }
     }
 
+    private fun filtrarMedicamentosPorFecha(
+        fecha: LocalDate
+    ) {
+        val filtrados = uiState.listaMedicamentos.filter { med ->
+            // 1. Parsear med.fechaInicio. Si es nula o vacía, no incluir.
+            if (med.fechaInicio.isNullOrBlank()) return@filter false
+
+            try {
+                // Análisis con trim() para evitar errores por espacios accidentales.
+                val inicio = LocalDate.parse(
+                    med.fechaInicio.trim(), 
+                    formatoFecha
+                )
+                
+                // 2. Si la fecha seleccionada es anterior a inicio, retorna false.
+                if (fecha.isBefore(inicio)) return@filter false
+
+                // 3. Manejo de fechaFin opcional
+                if (!med.fechaFin.isNullOrBlank()) {
+                    val fin = LocalDate.parse(
+                        med.fechaFin.trim(), 
+                        formatoFecha
+                    )
+                    // Si la fecha seleccionada es posterior a fin, retorna false.
+                    if (fecha.isAfter(fin)) return@filter false
+                }
+                
+                // Si fechaFin es nula/blanca o la fecha está en rango, retorna true.
+                true
+            } catch (e: DateTimeParseException) {
+                // Si el formato es incorrecto, no lo mostramos para evitar errores.
+                false
+            }
+        }
+        uiState = uiState.copy(
+            listaMedicamentosDelDia = filtrados
+        )
+    }
+
     private fun generarSemana() {
         val hoy = LocalDate.now()
         val semana = (0..6).map { 
@@ -140,6 +181,9 @@ class DashboardViewModel : ViewModel() {
         cargarCitasPorFecha(
             fecha = fecha
         )
+        filtrarMedicamentosPorFecha(
+            fecha = fecha
+        )
     }
 
     fun actualizarEstadoMedicamento(
@@ -157,24 +201,13 @@ class DashboardViewModel : ViewModel() {
             medicamento.id
         )
 
-        when (nuevoEstado) {
-            "Tomar" -> docRef.update(
-                "yaFueTomado", 
-                true
-            )
-            "Pasar" -> docRef.update(
-                "yaFueTomado", 
-                false
-            )
-            "Reprogramar" -> docRef.update(
-                "yaFueTomado", 
-                false
-            )
-        }
+        docRef.update(
+            "yaFueTomado", 
+            nuevoEstado == "Tomar"
+        )
     }
 
     override fun onCleared() {
-        // No llamamos a super.onCleared() porque el IDE marca que es vacío
         listenerCitas?.remove()
         listenerMedicamentos?.remove()
     }

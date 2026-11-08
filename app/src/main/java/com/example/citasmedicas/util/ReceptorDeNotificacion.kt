@@ -14,18 +14,18 @@ class ReceptorDeNotificacion : BroadcastReceiver() {
         context: Context, 
         intent: Intent
     ) {
-        val idMedicamento = intent.getStringExtra("MEDICAMENTO_ID") ?: return
-        val nombre = intent.getStringExtra("MEDICAMENTO_NOMBRE") ?: "Medicamento"
-        val dosis = intent.getStringExtra("MEDICAMENTO_DOSIS") ?: ""
-        val tipo = intent.getStringExtra("MEDICAMENTO_TIPO") ?: "Pastilla"
-        val hora = intent.getStringExtra("MEDICAMENTO_HORA") ?: "00:00"
-        
         val gestor = GestorDeNotificaciones(context)
         val scheduler = AndroidAlarmScheduler(context)
 
         when (intent.action) {
-            // Disparo de la alarma programada
+            // --- ALERTAS DE MEDICAMENTOS ---
             "ALERTA_MEDICAMENTO" -> {
+                val idMedicamento = intent.getStringExtra("MEDICAMENTO_ID") ?: return
+                val nombre = intent.getStringExtra("MEDICAMENTO_NOMBRE") ?: "Medicamento"
+                val dosis = intent.getStringExtra("MEDICAMENTO_DOSIS") ?: ""
+                val tipo = intent.getStringExtra("MEDICAMENTO_TIPO") ?: "Pastilla"
+                val hora = intent.getStringExtra("MEDICAMENTO_HORA") ?: "00:00"
+                
                 gestor.mostrarNotificacion(
                     idMedicamento = idMedicamento,
                     nombre = nombre,
@@ -35,8 +35,9 @@ class ReceptorDeNotificacion : BroadcastReceiver() {
                 )
             }
             
-            // Acción directa desde notificación: Confirmar
+            // Acción directa desde notificación: Confirmar Toma
             GestorDeNotificaciones.ACCION_CONFIRMAR -> {
+                val idMedicamento = intent.getStringExtra("MEDICAMENTO_ID") ?: return
                 val resultadoAsync = goAsync()
                 confirmarTomaEnFirestore(idMedicamento) {
                     resultadoAsync.finish()
@@ -45,8 +46,14 @@ class ReceptorDeNotificacion : BroadcastReceiver() {
                 Toast.makeText(context, "¡Toma registrada!", Toast.LENGTH_SHORT).show()
             }
 
-            // Acción directa desde notificación: Posponer
+            // Acción directa desde notificación: Posponer Toma
             GestorDeNotificaciones.ACCION_POSPONER -> {
+                val idMedicamento = intent.getStringExtra("MEDICAMENTO_ID") ?: return
+                val nombre = intent.getStringExtra("MEDICAMENTO_NOMBRE") ?: "Medicamento"
+                val dosis = intent.getStringExtra("MEDICAMENTO_DOSIS") ?: ""
+                val tipo = intent.getStringExtra("MEDICAMENTO_TIPO") ?: "Pastilla"
+                val hora = intent.getStringExtra("MEDICAMENTO_HORA") ?: "00:00"
+
                 val med = Medicamento(
                     id = idMedicamento, 
                     nombre = nombre, 
@@ -58,6 +65,21 @@ class ReceptorDeNotificacion : BroadcastReceiver() {
                 scheduler.posponer(med, 10)
                 gestor.cancelarNotificacion(idMedicamento.hashCode())
                 Toast.makeText(context, "Pospuesto 10 min", Toast.LENGTH_SHORT).show()
+            }
+
+            // --- ALERTAS DE CITAS ---
+            "ALERTA_CITA" -> {
+                val idCita = intent.getStringExtra("CITA_ID") ?: return
+                val motivo = intent.getStringExtra("CITA_MOTIVO") ?: "Cita Médica"
+                val lugar = intent.getStringExtra("CITA_LUGAR") ?: ""
+                val hora = intent.getStringExtra("CITA_HORA") ?: ""
+                
+                gestor.mostrarNotificacionCita(
+                    idCita = idCita,
+                    motivo = motivo,
+                    lugar = lugar,
+                    hora = hora
+                )
             }
         }
     }
