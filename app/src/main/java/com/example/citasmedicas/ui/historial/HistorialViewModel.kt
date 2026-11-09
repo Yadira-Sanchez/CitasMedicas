@@ -24,25 +24,28 @@ class HistorialViewModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    init {
-        cargarHistorial()
-    }
-
-    fun cargarHistorial() {
+    fun cargarHistorial(citaId: String? = null) {
         val uid = auth.currentUser?.uid ?: return
-        
+
         uiState = uiState.copy(
             estaCargando = true
         )
 
-        firestore.collection(
+        var consulta: Query = firestore.collection(
             "usuarios"
         ).document(
             uid
         ).collection(
             "historial"
-        ).orderBy(
-            "timestamp", 
+        )
+
+        // Si se proporciona un id de cita, filtramos por él
+        if (citaId != null) {
+            consulta = consulta.whereEqualTo("idCita", citaId)
+        }
+
+        consulta.orderBy(
+            "timestamp",
             Query.Direction.DESCENDING
         ).addSnapshotListener { instantaneo, error ->
             if (error != null) {

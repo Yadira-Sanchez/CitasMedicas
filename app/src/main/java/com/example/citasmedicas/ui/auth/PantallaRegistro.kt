@@ -265,7 +265,7 @@ fun PantallaRegistro(
             }
             Spacer(Modifier.height(24.dp))
 
-            // --- SECCIÓN: TÉRMINOS Y CONDICIONES ---
+            /* --- SECCIÓN: TÉRMINOS Y CONDICIONES ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -288,7 +288,7 @@ fun PantallaRegistro(
                         lineHeight = 18.sp
                     )
                 }
-            }
+            }*/
 
             // Mostrar errores si existen en el ViewModel
             modelo.mensajeError?.let {

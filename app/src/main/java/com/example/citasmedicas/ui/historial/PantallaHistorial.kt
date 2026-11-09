@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,9 +26,15 @@ import com.example.citasmedicas.ui.theme.AzulPrimario
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaHistorial(
+    citaId: String? = null,
     viewModel: HistorialViewModel = viewModel(),
     alVolver: () -> Unit
 ) {
+    // Disparamos la carga cuando la pantalla se inicia o cambia el citaId
+    LaunchedEffect(key1 = citaId) {
+        viewModel.cargarHistorial(citaId)
+    }
+
     val uiState = viewModel.uiState
 
     Scaffold(
@@ -35,14 +42,12 @@ fun PantallaHistorial(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Historial de Actividades",
+                        text = if (citaId != null) "Historial de Cita" else "Historial de Actividades",
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(
-                        onClick = alVolver
-                    ) {
+                    IconButton(onClick = alVolver) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver"
@@ -79,7 +84,7 @@ fun PantallaHistorial(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Aún no hay registros en tu historial.",
+                        text = "No se encontraron registros.",
                         color = Color.Gray
                     )
                 }
@@ -89,12 +94,8 @@ fun PantallaHistorial(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(
-                        items = uiState.listaHistorial
-                    ) { registro ->
-                        TarjetaHistorialItem(
-                            registro = registro
-                        )
+                    items(items = uiState.listaHistorial) { registro ->
+                        TarjetaHistorialItem(registro = registro)
                     }
                 }
             }
@@ -103,21 +104,15 @@ fun PantallaHistorial(
 }
 
 @Composable
-fun TarjetaHistorialItem(
-    registro: RegistroHistorial
-) {
+fun TarjetaHistorialItem(registro: RegistroHistorial) {
     val esMedicamento = registro.tipo == "MEDICAMENTO"
     val esTomado = registro.accion == "Tomado"
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -140,9 +135,7 @@ fun TarjetaHistorialItem(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = registro.nombreActividad,
                     style = MaterialTheme.typography.titleMedium,
@@ -155,9 +148,7 @@ fun TarjetaHistorialItem(
                 )
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = if (esTomado) Icons.Default.CheckCircle else Icons.Default.RemoveCircle,
                     contentDescription = null,

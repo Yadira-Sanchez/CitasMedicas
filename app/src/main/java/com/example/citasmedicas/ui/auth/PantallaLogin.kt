@@ -191,37 +191,6 @@ fun PantallaLogin(
 
                     Spacer(Modifier.height(16.dp))
 
-                    // Opciones de Recordarme y Olvidaste contraseña
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = recordarme,
-                                onCheckedChange = { recordarme = it }
-                            )
-                            Text(
-                                text = "Recordarme",
-                                fontSize = 14.sp,
-                                color = Color.Black,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        TextButton(
-                            onClick = { /* Acción futura opcional */ },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(
-                                text = "¿Olvidaste tu contraseña?",
-                                fontSize = 14.sp,
-                                color = AzulPrimario,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-
                     // Mostrar errores si existen
                     modelo.mensajeError?.let {
                         Text(

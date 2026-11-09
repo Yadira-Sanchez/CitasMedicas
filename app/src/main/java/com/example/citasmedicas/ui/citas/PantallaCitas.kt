@@ -202,28 +202,9 @@ fun PantallaCitas(
                     color = Color(0xFF1A1C1E)
                 )
 
-                Surface(
-                    shape = CircleShape,
-                    color = Color.White,
-                    shadowElevation = 2.dp,
-                    modifier = Modifier.size(
-                        size = 48.dp
-                    )
-                ) {
-                    IconButton(
-                        onClick = { /* Acción Notificaciones */ }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = "Notificaciones",
-                            tint = AzulPrimario,
-                            modifier = Modifier.size(
-                                size = 24.dp
-                            )
-                        )
-                    }
-                }
             }
+
+
 
             // Chips de Filtro
             LazyRow(

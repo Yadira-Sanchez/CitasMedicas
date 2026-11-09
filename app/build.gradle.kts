@@ -30,9 +30,6 @@ android {
 
         buildConfigField("String", "GROQ_API_KEY", "\"${localProperties.getProperty("GROQ_API_KEY", "")}\"")
     }
-
-
-
     buildTypes {
         release {
             isMinifyEnabled = false

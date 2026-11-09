@@ -134,12 +134,12 @@ fun PantallaInicio(
                     icon = { 
                         Icon(
                             imageVector = Icons.Default.Person, 
-                            contentDescription = "Salir"
+                            contentDescription = "Perfil"
                         ) 
                     },
                     label = { 
                         Text(
-                            text = "Salir"
+                            text = "Perfil"
                         ) 
                     }
                 )

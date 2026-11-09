@@ -5,10 +5,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +22,7 @@ import com.example.citasmedicas.ui.theme.AzulPrimario
 fun PantallaPerfil(
     viewModel: PerfilViewModel = viewModel(),
     alVolver: () -> Unit,
+    alNavegarA: (String) -> Unit,
     alCerrarSesion: () -> Unit
 ) {
     val uiState = viewModel.uiState
@@ -78,6 +76,62 @@ fun PantallaPerfil(
                     containerColor = Color.White
                 )
             )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = Color.White,
+                tonalElevation = 8.dp
+            ) {
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { alNavegarA("inicio") },
+                    icon = { 
+                        Icon(
+                            imageVector = Icons.Default.Home, 
+                            contentDescription = "Inicio"
+                        ) 
+                    },
+                    label = { Text("Inicio") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { alNavegarA("medicamentos") },
+                    icon = { 
+                        Icon(
+                            imageVector = Icons.Default.Medication, 
+                            contentDescription = "Medicinas"
+                        ) 
+                    },
+                    label = { Text("Medicinas") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { alNavegarA("citas") },
+                    icon = { 
+                        Icon(
+                            imageVector = Icons.Default.Event, 
+                            contentDescription = "Citas"
+                        ) 
+                    },
+                    label = { Text("Citas") }
+                )
+                NavigationBarItem(
+                    selected = true,
+                    onClick = { },
+                    icon = { 
+                        Icon(
+                            imageVector = Icons.Default.Person, 
+                            contentDescription = "Perfil"
+                        ) 
+                    },
+                    label = { Text("Perfil") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AzulPrimario,
+                        selectedTextColor = AzulPrimario,
+                        indicatorColor = AzulPrimario.copy(alpha = 0.1f)
+                    )
+                )
+            }
         }
     ) { padding ->
         Column(
