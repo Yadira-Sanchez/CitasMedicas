@@ -2,7 +2,6 @@ package com.example.citasmedicas.ui.medicamentos
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -26,7 +25,9 @@ fun DialogoConfirmarEliminacion(
     alDescartar: () -> Unit
 ) {
     AlertDialog(
-        onDismissRequest = alDescartar,
+        onDismissRequest = {
+            alDescartar()
+        },
         title = {
             Text(
                 text = "Eliminar medicamento",
@@ -42,7 +43,9 @@ fun DialogoConfirmarEliminacion(
         },
         confirmButton = {
             Button(
-                onClick = alConfirmar,
+                onClick = {
+                    alConfirmar()
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error
                 )
@@ -55,7 +58,9 @@ fun DialogoConfirmarEliminacion(
         },
         dismissButton = {
             OutlinedButton(
-                onClick = alDescartar
+                onClick = {
+                    alDescartar()
+                }
             ) {
                 Text(
                     text = "Cancelar",
@@ -69,7 +74,8 @@ fun DialogoConfirmarEliminacion(
 @Composable
 fun ElementoMedicamentoItem(
     medicamento: Medicamento,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onConfirmarToma: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -86,7 +92,9 @@ fun ElementoMedicamentoItem(
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
         ),
-        onClick = onClick
+        onClick = {
+            onClick()
+        }
     ) {
         Row(
             modifier = Modifier
@@ -145,7 +153,7 @@ fun ElementoMedicamentoItem(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
-                
+
                 Text(
                     text = "${medicamento.dosis} • ${medicamento.frecuencia}",
                     style = MaterialTheme.typography.bodyMedium,
@@ -160,11 +168,11 @@ fun ElementoMedicamentoItem(
 
                 // Etiqueta de horario (Badge/Píldora)
                 val colorFondoBadge = if (medicamento.yaFueTomado) {
-                    Color(0xFFF5F5F5) 
+                    Color(0xFFF5F5F5)
                 } else {
                     Color(0xFFFFF9C4)
                 }
-                
+
                 val colorTextoBadge = if (medicamento.yaFueTomado) {
                     Color(0xFF757575)
                 } else {
@@ -185,7 +193,11 @@ fun ElementoMedicamentoItem(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = if (medicamento.yaFueTomado) Icons.Default.Check else Icons.Outlined.Schedule,
+                            imageVector = if (medicamento.yaFueTomado) {
+                                Icons.Default.Check
+                            } else {
+                                Icons.Outlined.Schedule
+                            },
                             contentDescription = null,
                             modifier = Modifier.size(
                                 size = 14.dp
@@ -198,7 +210,11 @@ fun ElementoMedicamentoItem(
                             )
                         )
                         Text(
-                            text = if (medicamento.yaFueTomado) "Completado hoy (${medicamento.horaToma})" else "Próximo: Hoy, ${medicamento.horaToma}",
+                            text = if (medicamento.yaFueTomado) {
+                                "Completado hoy (${medicamento.horaToma})"
+                            } else {
+                                "Próximo: Hoy, ${medicamento.horaToma}"
+                            },
                             style = MaterialTheme.typography.labelMedium,
                             color = colorTextoBadge,
                             fontWeight = FontWeight.Medium
@@ -209,15 +225,21 @@ fun ElementoMedicamentoItem(
 
             // Botón de verificación a la derecha
             IconButton(
-                onClick = { /* Lógica se mantiene igual */ },
+                onClick = {
+                    onConfirmarToma()
+                },
                 modifier = Modifier.size(
                     size = 40.dp
                 )
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = if (medicamento.yaFueTomado) Color(0xFF4CAF50) else Color(0xFFE0E0E0),
+                    contentDescription = "Confirmar toma",
+                    tint = if (medicamento.yaFueTomado) {
+                        Color(0xFF4CAF50)
+                    } else {
+                        Color(0xFFE0E0E0)
+                    },
                     modifier = Modifier.size(
                         size = 32.dp
                     )

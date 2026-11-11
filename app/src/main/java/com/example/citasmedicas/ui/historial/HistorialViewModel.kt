@@ -9,65 +9,51 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 
-data class HistorialUiState(
-    val listaHistorial: List<RegistroHistorial> = emptyList(),
-    val estaCargando: Boolean = false,
-    val mensajeError: String? = null
-)
-
 class HistorialViewModel : ViewModel() {
-    var uiState by mutableStateOf(
-        HistorialUiState()
+
+    var listaHistorial by mutableStateOf<List<RegistroHistorial>>(
+        emptyList()
+    )
+        private set
+
+    var estaCargando by mutableStateOf(
+        false
     )
         private set
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    fun cargarHistorial(citaId: String? = null) {
+    // RF19: Lectura en tiempo real del historial
+    fun obtenerHistorial() {
         val uid = auth.currentUser?.uid ?: return
 
-        uiState = uiState.copy(
-            estaCargando = true
-        )
+        estaCargando = true
 
-        var consulta: Query = firestore.collection(
+        firestore.collection(
             "usuarios"
         ).document(
             uid
         ).collection(
-            "historial"
-        )
-
-        // Si se proporciona un id de cita, filtramos por él
-        if (citaId != null) {
-            consulta = consulta.whereEqualTo("idCita", citaId)
-        }
-
-        consulta.orderBy(
+            "historial_medicamentos"
+        ).orderBy(
             "timestamp",
             Query.Direction.DESCENDING
         ).addSnapshotListener { instantaneo, error ->
+            estaCargando = false
+
             if (error != null) {
-                uiState = uiState.copy(
-                    mensajeError = "Error al cargar historial: ${error.message}",
-                    estaCargando = false
-                )
+                // Esta línea imprimirá el error real en la consola Logcat
+                android.util.Log.e("ERROR_HISTORIAL", "Error de Firestore: ${error.message}", error)
                 return@addSnapshotListener
             }
 
             if (instantaneo != null) {
-                val registros = instantaneo.documents.mapNotNull { doc ->
-                    doc.toObject(
-                        RegistroHistorial::class.java
-                    )?.copy(
-                        id = doc.id
-                    )
-                }
-                uiState = uiState.copy(
-                    listaHistorial = registros,
-                    estaCargando = false
+                // Convertir documentos a objetos de tipo RegistroHistorial
+                val lista = instantaneo.toObjects(
+                    RegistroHistorial::class.java
                 )
+                listaHistorial = lista
             }
         }
     }

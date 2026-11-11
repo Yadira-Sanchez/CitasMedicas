@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+    implementation(libs.androidx.compose.animation.graphics)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

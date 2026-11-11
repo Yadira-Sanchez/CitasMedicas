@@ -36,6 +36,7 @@ import com.example.citasmedicas.ui.perfil.PantallaPerfil
 import com.example.citasmedicas.util.GestorDeNotificaciones
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+
 object Destinos {
     const val LOGIN = "login"
     const val REGISTRO = "registro"
@@ -50,15 +51,12 @@ object Destinos {
     const val DETALLE_MEDICAMENTO = "detalle_medicamento/{medicamentoId}"
     const val EDITAR_MEDICAMENTO = "editar_medicamento/{medicamentoId}"
     const val DETALLE_CITA = "detalle_cita/{citaId}"
-    const val HISTORIAL_CITAS = "historial_citas/{citaId}"
     const val EDITAR_CITA = "editar_cita/{citaId}"
-    
     const val ALERTA_MEDICAMENTO = "alerta_medicamento/{medicamentoId}"
 
     fun detalleMedicamento(id: String) = "detalle_medicamento/$id"
     fun editarMedicamento(id: String) = "editar_medicamento/$id"
     fun detalleCita(id: String) = "detalle_cita/$id"
-    fun historialCitas(id: String) = "historial_citas/$id"
     fun editarCita(id: String) = "editar_cita/$id"
     fun alertaMedicamento(id: String) = "alerta_medicamento/$id"
 }
@@ -74,10 +72,11 @@ class MainActivity : ComponentActivity() {
             CitasMedicasTheme {
                 val auth = FirebaseAuth.getInstance()
                 val navController = rememberNavController()
+
                 var usuarioFirebase by remember { mutableStateOf(auth.currentUser) }
                 var mostrarDialogoPermiso by remember { mutableStateOf(false) }
 
-                // Manejo de intents (Notificaciones)
+                // Escuchar notificaciones (Intents)
                 LaunchedEffect(key1 = intent) {
                     val pantalla = intent.getStringExtra("PANTALLA")
                     val medId = intent.getStringExtra("MEDICAMENTO_ID")
@@ -90,7 +89,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Permiso de alarmas exactas en Android 12+
+                // Verificar permisos de alarmas exactas (Android 12+)
                 LaunchedEffect(key1 = Unit) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -100,14 +99,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // Vigilar estado de sesión de Firebase
                 DisposableEffect(key1 = auth) {
-                    val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-                        usuarioFirebase = firebaseAuth.currentUser
-                    }
+                    val listener = FirebaseAuth.AuthStateListener { usuarioFirebase = it.currentUser }
                     auth.addAuthStateListener(listener)
-                    onDispose {
-                        auth.removeAuthStateListener(listener)
-                    }
+                    onDispose { auth.removeAuthStateListener(listener) }
                 }
 
                 Scaffold(
@@ -115,38 +111,57 @@ class MainActivity : ComponentActivity() {
                 ) { padding ->
                     Box(modifier = Modifier.fillMaxSize()) {
 
-                        // 2 y 3. Llamada al NavHost extraído limpiamente
+                        // Llamada al mapa de navegación limpio
                         NavegacionApp(
                             navController = navController,
                             usuarioFirebase = usuarioFirebase,
                             auth = auth
                         )
 
-                        // Diálogo de permisos de alarma
+                        // Diálogo de permisos
                         if (mostrarDialogoPermiso) {
                             AlertDialog(
-                                onDismissRequest = { mostrarDialogoPermiso = false },
-                                title = { Text("Permiso de Alarmas Exactas") },
-                                text = { Text("Para recibir notificaciones de tus medicamentos a la hora exacta, necesitamos este permiso.") },
+                                onDismissRequest = {
+                                    mostrarDialogoPermiso = false
+                                },
+                                title = {
+                                    Text(
+                                        text = "Permiso de Alarmas Exactas"
+                                    )
+                                },
+                                text = {
+                                    Text(
+                                        text = "Para recibir notificaciones a la hora exacta, necesitamos este permiso."
+                                    )
+                                },
                                 confirmButton = {
                                     TextButton(
                                         onClick = {
                                             mostrarDialogoPermiso = false
                                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                                val intent = Intent().apply {
-                                                    action = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
-                                                    data = Uri.parse("package:${packageName}")
-                                                }
-                                                startActivity(intent)
+                                                startActivity(
+                                                    Intent(
+                                                        Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                                        Uri.parse("package:$packageName")
+                                                    )
+                                                )
                                             }
                                         }
                                     ) {
-                                        Text("Ir a Ajustes")
+                                        Text(
+                                            text = "Ir a Ajustes"
+                                        )
                                     }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { mostrarDialogoPermiso = false }) {
-                                        Text("Ahora no")
+                                    TextButton(
+                                        onClick = {
+                                            mostrarDialogoPermiso = false
+                                        }
+                                    ) {
+                                        Text(
+                                            text = "Ahora no"
+                                        )
                                     }
                                 }
                             )
@@ -158,7 +173,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// 2 y 3. Función independiente que contiene todo el mapa de navegacion
 @Composable
 fun NavegacionApp(
     navController: NavHostController,
@@ -170,6 +184,7 @@ fun NavegacionApp(
         startDestination = if (usuarioFirebase == null) Destinos.LOGIN else Destinos.INICIO
     ) {
 
+        // --- AUTENTICACIÓN ---
         composable(route = Destinos.LOGIN) {
             PantallaLogin(
                 alEntrar = {
@@ -196,6 +211,7 @@ fun NavegacionApp(
             )
         }
 
+        // --- DASHBOARD / INICIO ---
         composable(route = Destinos.INICIO) {
             PantallaInicio(
                 alAgregarMedicamento = {
@@ -218,10 +234,10 @@ fun NavegacionApp(
                 alNuevaCita = {
                     navController.navigate(Destinos.NUEVA_CITA)
                 },
-                alDetalleMedicamento = { id: String ->
+                alDetalleMedicamento = { id ->
                     navController.navigate(Destinos.detalleMedicamento(id))
                 },
-                alDetalleCita = { id: String ->
+                alDetalleCita = { id ->
                     navController.navigate(Destinos.detalleCita(id))
                 },
                 alVerHistorial = {
@@ -237,10 +253,17 @@ fun NavegacionApp(
             )
         }
 
+        // --- MÓDULO MEDICAMENTOS ---
         composable(route = Destinos.MEDICAMENTOS) {
             PantallaMedicamentos(
                 alAnadirMedicina = {
                     navController.navigate(Destinos.NUEVO_MEDICAMENTO)
+                },
+                alVerDetalle = { id ->
+                    navController.navigate(Destinos.detalleMedicamento(id))
+                },
+                alVerHistorial = {
+                    navController.navigate(Destinos.HISTORIAL)
                 },
                 alNavegarA = { destino ->
                     navController.navigate(destino) {
@@ -248,13 +271,91 @@ fun NavegacionApp(
                         launchSingleTop = true
                         restoreState = true
                     }
-                },
-                alVerDetalle = { id ->
-                    navController.navigate(Destinos.detalleMedicamento(id))
                 }
             )
         }
 
+        composable(route = Destinos.NUEVO_MEDICAMENTO) {
+            PantallaNuevoMedicamento(
+                alGuardar = {
+                    navController.popBackStack()
+                },
+                alVolver = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Destinos.DETALLE_MEDICAMENTO,
+            arguments = listOf(
+                navArgument(
+                    name = "medicamentoId"
+                ) {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("medicamentoId") ?: ""
+            PantallaDetalleMedicamento(
+                medicamentoId = id,
+                alEditar = {
+                    navController.navigate(Destinos.editarMedicamento(id))
+                },
+                alVolver = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Destinos.EDITAR_MEDICAMENTO,
+            arguments = listOf(
+                navArgument(
+                    name = "medicamentoId"
+                ) {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("medicamentoId") ?: ""
+            PantallaEditarMedicamento(
+                medicamentoId = id,
+                alActualizar = {
+                    navController.popBackStack()
+                },
+                alVolver = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Destinos.ALERTA_MEDICAMENTO,
+            arguments = listOf(
+                navArgument(
+                    name = "medicamentoId"
+                ) {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("medicamentoId") ?: ""
+            PantallaAlertaMedicamento(
+                medicamentoId = id,
+                alConfirmar = {
+                    navController.popBackStack()
+                },
+                alPosponer = {
+                    navController.popBackStack()
+                },
+                alOmitir = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // --- MÓDULO CITAS ---
         composable(route = Destinos.CITAS) {
             PantallaCitas(
                 alNavegarA = { ruta ->
@@ -267,13 +368,68 @@ fun NavegacionApp(
                 alNuevaCita = {
                     navController.navigate(Destinos.NUEVA_CITA)
                 },
-                alDetalleCita = { idCita ->
-                    navController.navigate(Destinos.detalleCita(idCita))
+                alDetalleCita = { id ->
+                    navController.navigate(Destinos.detalleCita(id))
                 }
-
             )
         }
 
+        composable(route = Destinos.NUEVA_CITA) {
+            PantallaNuevaCita(
+                alGuardar = {
+                    navController.popBackStack()
+                },
+                alVolver = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Destinos.DETALLE_CITA,
+            arguments = listOf(
+                navArgument(
+                    name = "citaId"
+                ) {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("citaId") ?: ""
+            PantallaDetalleCita(
+                citaId = id,
+                alEditar = {
+                    navController.navigate(Destinos.editarCita(id))
+                },
+                alVolver = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Destinos.EDITAR_CITA,
+            arguments = listOf(
+                navArgument(
+                    name = "citaId"
+                ) {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("citaId") ?: ""
+            PantallaEditarCita(
+                citaId = id,
+                alActualizar = {
+                    navController.popBackStack()
+                },
+                alVolver = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // --- HISTORIAL Y PERFIL ---
         composable(route = Destinos.HISTORIAL) {
             PantallaHistorial(
                 alVolver = {
@@ -299,125 +455,6 @@ fun NavegacionApp(
                     navController.navigate(Destinos.LOGIN) {
                         popUpTo(Destinos.INICIO) { inclusive = true }
                     }
-                }
-            )
-        }
-
-        composable(
-            route = Destinos.DETALLE_MEDICAMENTO,
-            arguments = listOf(navArgument("medicamentoId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("medicamentoId") ?: ""
-            PantallaDetalleMedicamento(
-                medicamentoId = id,
-                alEditar = {
-                    navController.navigate(Destinos.editarMedicamento(id))
-                },
-                alVolver = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(
-            route = Destinos.HISTORIAL_CITAS,
-            arguments = listOf(navArgument("citaId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val idCita = backStackEntry.arguments?.getString("citaId") ?: ""
-            PantallaHistorial(
-                citaId = idCita,
-                alVolver = {
-                    navController.popBackStack()
-                }
-            )
-        }
-        
-
-        composable(
-            route = Destinos.EDITAR_MEDICAMENTO,
-            arguments = listOf(navArgument("medicamentoId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("medicamentoId") ?: ""
-            PantallaEditarMedicamento(
-                medicamentoId = id,
-                alActualizar = {
-                    navController.popBackStack()
-                },
-                alVolver = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(
-            route = Destinos.DETALLE_CITA,
-            arguments = listOf(navArgument("citaId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("citaId") ?: ""
-            PantallaDetalleCita(
-                citaId = id,
-                alEditar = {
-                    navController.navigate(Destinos.editarCita(id))
-                },
-                alVolver = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(route = Destinos.NUEVA_CITA) {
-            PantallaNuevaCita(
-                alGuardar = {
-                    navController.popBackStack()
-                },
-                alVolver = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(
-            route = Destinos.EDITAR_CITA,
-            arguments = listOf(navArgument("citaId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("citaId") ?: ""
-            PantallaEditarCita(
-                citaId = id,
-                alActualizar = {
-                    navController.popBackStack()
-                },
-                alVolver = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(route = Destinos.NUEVO_MEDICAMENTO) {
-            PantallaNuevoMedicamento(
-                alGuardar = {
-                    navController.popBackStack()
-                },
-                alVolver = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(
-            route = Destinos.ALERTA_MEDICAMENTO,
-            arguments = listOf(navArgument("medicamentoId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("medicamentoId") ?: ""
-            PantallaAlertaMedicamento(
-                medicamentoId = id,
-                alConfirmar = {
-                    navController.popBackStack()
-                },
-                alPosponer = {
-                    navController.popBackStack()
-                },
-                alOmitir = {
-                    navController.popBackStack()
                 }
             )
         }

@@ -7,10 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Medication
-import androidx.compose.material.icons.filled.RemoveCircle
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citasmedicas.data.RegistroHistorial
 import com.example.citasmedicas.ui.theme.AzulPrimario
@@ -26,31 +24,33 @@ import com.example.citasmedicas.ui.theme.AzulPrimario
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaHistorial(
-    citaId: String? = null,
     viewModel: HistorialViewModel = viewModel(),
     alVolver: () -> Unit
 ) {
-    // Disparamos la carga cuando la pantalla se inicia o cambia el citaId
-    LaunchedEffect(key1 = citaId) {
-        viewModel.cargarHistorial(citaId)
+    LaunchedEffect(
+        key1 = Unit
+    ) {
+        viewModel.obtenerHistorial()
     }
-
-    val uiState = viewModel.uiState
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = if (citaId != null) "Historial de Cita" else "Historial de Actividades",
+                        text = "Historial de Recordatorios",
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = alVolver) {
+                    IconButton(
+                        onClick = {
+                            alVolver()
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = "Regresar"
                         )
                     }
                 },
@@ -62,40 +62,47 @@ fun PantallaHistorial(
     ) { padding ->
         Box(
             modifier = Modifier
-                .padding(paddingValues = padding)
                 .fillMaxSize()
+                .padding(
+                    paddingValues = padding
+                )
         ) {
-            if (uiState.estaCargando) {
+            if (viewModel.estaCargando) {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
+                    modifier = Modifier.align(
+                        alignment = Alignment.Center
+                    ),
                     color = AzulPrimario
                 )
-            } else if (uiState.listaHistorial.isEmpty()) {
-                Column(
+            } else if (viewModel.listaHistorial.isEmpty()) {
+                Box(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.LightGray
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No se encontraron registros.",
-                        color = Color.Gray
+                        text = "No tienes actividades registradas en el historial",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(
+                            horizontal = 32.dp
+                        )
                     )
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(
+                        all = 16.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(
+                        space = 12.dp
+                    )
                 ) {
-                    items(items = uiState.listaHistorial) { registro ->
-                        TarjetaHistorialItem(registro = registro)
+                    items(
+                        items = viewModel.listaHistorial
+                    ) { registro ->
+                        TarjetaHistorial(
+                            registro = registro
+                        )
                     }
                 }
             }
@@ -104,64 +111,91 @@ fun PantallaHistorial(
 }
 
 @Composable
-fun TarjetaHistorialItem(registro: RegistroHistorial) {
-    val esMedicamento = registro.tipo == "MEDICAMENTO"
-    val esTomado = registro.accion == "Tomado"
+fun TarjetaHistorial(
+    registro: RegistroHistorial
+) {
+    val esTomado = registro.estado == "Tomado"
+    val colorEstado = if (esTomado) Color(0xFF2E7D32) else Color(0xFFF57C00)
+    val iconoEstado = if (esTomado) Icons.Default.CheckCircle else Icons.Default.Warning
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(
+            size = 16.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(
+                    all = 16.dp
+                )
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = if (esMedicamento) Color(0xFFE3F2FD) else Color(0xFFF1F8E9),
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = if (esMedicamento) Icons.Default.Medication else Icons.Default.Event,
-                    contentDescription = null,
-                    tint = if (esMedicamento) AzulPrimario else Color(0xFF2E7D32),
-                    modifier = Modifier.padding(12.dp)
+            Column(
+                modifier = Modifier.weight(
+                    weight = 1f
                 )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
+            ) {
                 Text(
                     text = registro.nombreActividad,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1C1E)
+                )
+                Spacer(
+                    modifier = Modifier.height(
+                        height = 4.dp
+                    )
                 )
                 Text(
-                    text = "${registro.fecha} • ${registro.hora}",
+                    text = registro.fechaHora,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (esTomado) Icons.Default.CheckCircle else Icons.Default.RemoveCircle,
-                    contentDescription = null,
-                    tint = if (esTomado) Color(0xFF4CAF50) else Color(0xFFF44336),
-                    modifier = Modifier.size(16.dp)
+            Surface(
+                color = colorEstado.copy(
+                    alpha = 0.1f
+                ),
+                shape = RoundedCornerShape(
+                    size = 8.dp
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = registro.accion,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (esTomado) Color(0xFF2E7D32) else Color(0xFFD32F2F),
-                    fontWeight = FontWeight.Bold
-                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(
+                        horizontal = 8.dp,
+                        vertical = 4.dp
+                    ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = iconoEstado,
+                        contentDescription = null,
+                        tint = colorEstado,
+                        modifier = Modifier.size(
+                            size = 16.dp
+                        )
+                    )
+                    Spacer(
+                        modifier = Modifier.width(
+                            width = 4.dp
+                        )
+                    )
+                    Text(
+                        text = registro.estado,
+                        color = colorEstado,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }

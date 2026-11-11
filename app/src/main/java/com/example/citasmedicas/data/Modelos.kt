@@ -1,6 +1,7 @@
 package com.example.citasmedicas.data
 
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentId
 
 // Datos del usuario que se registra
 data class Usuario(
@@ -11,7 +12,7 @@ data class Usuario(
 
 // Datos del medicamento (RF08, RF14)
 data class Medicamento(
-    val id: String = "",
+    @DocumentId val id: String = "", // Crucial para identificar el documento
     val nombre: String = "",
     val tipo: String = "",
     val dosis: String = "",
@@ -25,12 +26,12 @@ data class Medicamento(
 
 // Datos de la cita médica (RF09)
 data class CitaMedica(
-    val id: String = "",
-    val especialidad: String = "", // Especialidad o Motivo
-    val doctor: String = "", // Opcional
-    val lugar: String = "",   // Ubicación
-    val fecha: String = "",  // DD/MM/YYYY
-    val hora: String = "",   // HH:MM
+    @DocumentId val id: String = "",
+    val especialidad: String = "",
+    val doctor: String = "",
+    val lugar: String = "",
+    val fecha: String = "",
+    val hora: String = "",
     val recordatorioActivo: Boolean = true,
     val notas: String = "",
     val creadoEn: Timestamp = Timestamp.now()
@@ -38,13 +39,14 @@ data class CitaMedica(
 
 // Datos para el historial (RF19)
 data class RegistroHistorial(
-    val id: String = "",
+    @DocumentId val id: String = "",
+    val medicamentoId: String = "",
     val nombreActividad: String = "",
-    val tipo: String = "",   // "MEDICAMENTO" o "CITA"
-    val accion: String = "", // "Tomado", "Omitido", "Pasado"
-    val fecha: String = "",  // DD/MM/YYYY
-    val hora: String = "",   // HH:MM
-    val timestamp: Timestamp = Timestamp.now()
+    val tipo: String = "MEDICAMENTO",
+    val accion: String = "Tomado",
+    val estado: String = "Tomado",
+    val fechaHora: String = "",
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 // Datos para el chatbot (RF23)

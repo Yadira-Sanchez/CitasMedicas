@@ -33,79 +33,42 @@ fun PantallaAlertaMedicamento(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(
-        key1 = medicamentoId
-    ) {
-        modelo.obtenerMedicamentoPorId(
-            id = medicamentoId
-        )
+    LaunchedEffect(key1 = medicamentoId) {
+        modelo.obtenerMedicamentoPorId(id = medicamentoId)
     }
 
-    // Observar mensajes de éxito desde el ViewModel para mostrarlos en el Snackbar
-    LaunchedEffect(
-        key1 = modelo.mensajeExito
-    ) {
+    LaunchedEffect(key1 = modelo.mensajeExito) {
         modelo.mensajeExito?.let {
-            scope.launch {
-                snackbarHostState.showSnackbar(
-                    message = it
-                )
-            }
+            snackbarHostState.showSnackbar(message = it)
             modelo.mensajeExito = null
         }
     }
 
     Scaffold(
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState
-            )
-        }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    paddingValues = padding
-                ),
+            modifier = Modifier.fillMaxSize().padding(padding),
             color = MaterialTheme.colorScheme.background
         ) {
             if (medicamento == null) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = AzulPrimario
-                    )
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = AzulPrimario)
                 }
             } else {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            all = 24.dp
-                        ),
+                    modifier = Modifier.fillMaxSize().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    // Cabecera con Icono
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.HealthAndSafety,
                             contentDescription = null,
                             tint = Color(0xFF2E7D32),
-                            modifier = Modifier.size(
-                                size = 32.dp
-                            )
+                            modifier = Modifier.size(32.dp)
                         )
-                        Spacer(
-                            modifier = Modifier.width(
-                                width = 8.dp
-                            )
-                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Alarma de Medicamento",
                             fontSize = 18.sp,
@@ -114,139 +77,52 @@ fun PantallaAlertaMedicamento(
                         )
                     }
 
-                    Spacer(
-                        modifier = Modifier.height(
-                            height = 32.dp
-                        )
-                    )
-
-                    Text(
-                        text = "¡Hora de tomar tu medicamento!",
-                        fontSize = 22.sp,
-                        textAlign = TextAlign.Center,
-                        fontFamily = FontFamily.Default
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(
-                            height = 16.dp
-                        )
-                    )
-
-                    Text(
-                        text = medicamento.nombre,
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center,
-                        fontFamily = FontFamily.Default
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(
-                            height = 24.dp
-                        )
-                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text(text = "¡Hora de tomar tu medicamento!", fontSize = 22.sp, textAlign = TextAlign.Center)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = medicamento.nombre, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(
-                            size = 16.dp
-                        ),
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = 4.dp
-                        ),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White
-                        )
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(
-                                all = 24.dp
-                            ),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "Dosis exacta:",
-                                fontSize = 14.sp,
-                                color = Color.Gray,
-                                fontFamily = FontFamily.Default
-                            )
-                            Text(
-                                text = "${medicamento.dosis} (${medicamento.tipo})",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                fontFamily = FontFamily.Default
-                            )
-                            
-                            Spacer(
-                                modifier = Modifier.height(
-                                    height = 16.dp
-                                )
-                            )
-                            
-                            Text(
-                                text = "Instrucciones:",
-                                fontSize = 14.sp,
-                                color = Color.Gray,
-                                fontFamily = FontFamily.Default
-                            )
-                            Text(
-                                text = "Toma programada para las ${medicamento.horaToma}",
-                                fontSize = 16.sp,
-                                textAlign = TextAlign.Center,
-                                fontFamily = FontFamily.Default
-                            )
+                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "Dosis exacta:", fontSize = 14.sp, color = Color.Gray)
+                            Text(text = "${medicamento.dosis} (${medicamento.tipo})", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(text = "Instrucciones:", fontSize = 14.sp, color = Color.Gray)
+                            Text(text = "Toma programada para las ${medicamento.horaToma}", fontSize = 16.sp)
                         }
                     }
 
-                    Spacer(
-                        modifier = Modifier.height(
-                            height = 48.dp
-                        )
-                    )
+                    Spacer(modifier = Modifier.height(48.dp))
 
-                    // RF17: Botón Confirmar Toma
+                    // Botón Confirmar Toma
                     Button(
                         onClick = {
                             modelo.confirmarToma(
-                                medicamentoId = medicamento.id,
+                                medicamento = medicamento,
                                 alTerminar = {
                                     scope.launch {
-                                        delay(1500) // Esperar a que el usuario vea el snackbar
+                                        delay(1500)
                                         alConfirmar()
                                     }
                                 }
                             )
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(
-                                height = 64.dp
-                            ),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF2E7D32)
-                        ),
-                        shape = RoundedCornerShape(
-                            size = 32.dp
-                        )
+                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                        shape = RoundedCornerShape(32.dp)
                     ) {
-                        Text(
-                            text = "Confirmar Toma",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Default
-                        )
+                        Text(text = "Confirmar Toma", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    Spacer(
-                        modifier = Modifier.height(
-                            height = 16.dp
-                        )
-                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // RF18: Botón Posponer Recordatorio
+                    // Botón Posponer Recordatorio
                     Button(
                         onClick = {
                             modelo.posponerRecordatorio(
@@ -260,37 +136,21 @@ fun PantallaAlertaMedicamento(
                                 }
                             )
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(
-                                height = 64.dp
-                            ),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFF57C00)
-                        ),
-                        shape = RoundedCornerShape(
-                            size = 32.dp
-                        )
+                        modifier = Modifier.fillMaxWidth().height(64.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF57C00)),
+                        shape = RoundedCornerShape(32.dp)
                     ) {
-                        Text(
-                            text = "Posponer 10 min",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Default
-                        )
+                        Text(text = "Posponer 10 min", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    Spacer(
-                        modifier = Modifier.height(
-                            height = 24.dp
-                        )
-                    )
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    // RF17: Enlace Omitir Toma
+                    // Enlace Omitir Toma
                     TextButton(
                         onClick = {
+                            // CORRECCIÓN: Pasamos el objeto medicamento completo
                             modelo.omitirToma(
-                                medicamentoId = medicamento.id,
+                                medicamento = medicamento,
                                 alTerminar = {
                                     scope.launch {
                                         delay(1000)
@@ -300,12 +160,7 @@ fun PantallaAlertaMedicamento(
                             )
                         }
                     ) {
-                        Text(
-                            text = "Omitir esta dosis",
-                            fontSize = 16.sp,
-                            color = Color.Gray,
-                            fontFamily = FontFamily.Default
-                        )
+                        Text(text = "Omitir esta dosis", fontSize = 16.sp, color = Color.Gray)
                     }
                 }
             }

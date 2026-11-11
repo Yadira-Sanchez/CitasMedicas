@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,13 +24,14 @@ import com.example.citasmedicas.ui.theme.AzulPrimario
 fun PantallaMedicamentos(
     alAnadirMedicina: () -> Unit,
     alVerDetalle: (String) -> Unit,
+    alVerHistorial: () -> Unit,
     alNavegarA: (String) -> Unit,
     dashboardViewModel: DashboardViewModel = viewModel(),
     medicamentoViewModel: MedicamentoViewModel = viewModel()
 ) {
     val uiState = dashboardViewModel.uiState
-    val snackbarHostState = remember { 
-        SnackbarHostState() 
+    val snackbarHostState = remember {
+        SnackbarHostState()
     }
 
     LaunchedEffect(
@@ -55,10 +55,10 @@ fun PantallaMedicamentos(
     }
 
     Scaffold(
-        snackbarHost = { 
+        snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState
-            ) 
+            )
         },
         bottomBar = {
             Column(
@@ -67,13 +67,13 @@ fun PantallaMedicamentos(
             ) {
                 // Botón Principal de Acción
                 Button(
-                    onClick = { 
-                        alAnadirMedicina() 
+                    onClick = {
+                        alAnadirMedicina()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            horizontal = 24.dp, 
+                            horizontal = 24.dp,
                             vertical = 12.dp
                         )
                         .height(
@@ -109,69 +109,69 @@ fun PantallaMedicamentos(
                     tonalElevation = 8.dp
                 ) {
                     NavigationBarItem(
-                        icon = { 
+                        icon = {
                             Icon(
-                                imageVector = Icons.Default.Home, 
+                                imageVector = Icons.Default.Home,
                                 contentDescription = "Inicio"
-                            ) 
+                            )
                         },
-                        label = { 
+                        label = {
                             Text(
                                 text = "Inicio"
-                            ) 
+                            )
                         },
                         selected = false,
-                        onClick = { 
-                            alNavegarA("inicio") 
+                        onClick = {
+                            alNavegarA("inicio")
                         }
                     )
                     NavigationBarItem(
-                        icon = { 
+                        icon = {
                             Icon(
-                                imageVector = Icons.Default.Medication, 
+                                imageVector = Icons.Default.Medication,
                                 contentDescription = "Medicinas"
-                            ) 
+                            )
                         },
-                        label = { 
+                        label = {
                             Text(
                                 text = "Medicinas"
-                            ) 
+                            )
                         },
                         selected = true,
                         onClick = { }
                     )
                     NavigationBarItem(
-                        icon = { 
+                        icon = {
                             Icon(
-                                imageVector = Icons.Default.Event, 
+                                imageVector = Icons.Default.Event,
                                 contentDescription = "Citas"
-                            ) 
+                            )
                         },
-                        label = { 
+                        label = {
                             Text(
                                 text = "Citas"
-                            ) 
+                            )
                         },
                         selected = false,
-                        onClick = { 
-                            alNavegarA("citas") 
+                        onClick = {
+                            alNavegarA("citas")
                         }
                     )
                     NavigationBarItem(
-                        icon = { 
+                        icon = {
                             Icon(
-                                imageVector = Icons.Default.Person, 
+                                imageVector = Icons.Default.Person,
                                 contentDescription = "Perfil"
-                            ) 
+                            )
                         },
-                        label = { 
+                        label = {
                             Text(
                                 text = "Perfil"
-                            ) 
+                            )
                         },
                         selected = false,
-                        onClick = { 
-                            alNavegarA("perfil") 
+                        onClick = {
+                            alNavegarA("perfil")
                         }
                     )
                 }
@@ -202,7 +202,7 @@ fun PantallaMedicamentos(
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 1.sp
             )
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -218,6 +218,18 @@ fun PantallaMedicamentos(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1A1C1E)
                 )
+
+                IconButton(
+                    onClick = {
+                        alVerHistorial()
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = "Ver historial",
+                        tint = AzulPrimario
+                    )
+                }
             }
 
             // Filtros por Chips
@@ -235,10 +247,10 @@ fun PantallaMedicamentos(
                     FilterChip(
                         selected = true,
                         onClick = { },
-                        label = { 
+                        label = {
                             Text(
                                 text = "Todos (${uiState.listaMedicamentos.size})"
-                            ) 
+                            )
                         },
                         shape = RoundedCornerShape(
                             size = 24.dp
@@ -260,11 +272,11 @@ fun PantallaMedicamentos(
 
             if (uiState.listaMedicamentos.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(), 
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No tienes medicamentos registrados.", 
+                        text = "No tienes medicamentos registrados.",
                         color = Color.Gray
                     )
                 }
@@ -283,8 +295,13 @@ fun PantallaMedicamentos(
                     ) { medicamento ->
                         ElementoMedicamentoItem(
                             medicamento = medicamento,
-                            onClick = { 
-                                alVerDetalle(medicamento.id) 
+                            onClick = {
+                                alVerDetalle(medicamento.id)
+                            },
+                            onConfirmarToma = {
+                                medicamentoViewModel.confirmarToma(
+                                    medicamento = medicamento
+                                )
                             }
                         )
                     }
