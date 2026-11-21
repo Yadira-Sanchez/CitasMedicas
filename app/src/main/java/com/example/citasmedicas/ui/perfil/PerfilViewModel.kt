@@ -1,86 +1,100 @@
 package com.example.citasmedicas.ui.perfil
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 data class PerfilUiState(
     val nombre: String = "",
     val correo: String = "",
-    val estaCargando: Boolean = false,
-    val mensajeExito: String? = null,
-    val mensajeError: String? = null
+    val isLoading: Boolean = false,
+    val mensajeEstado: String? = null,
+    val esError: Boolean = false,
+    val errorContrasenaActual: String? = null,
+    val cambioExitoso: Boolean = false
 )
 
 class PerfilViewModel : ViewModel() {
-    var uiState by mutableStateOf(
-        PerfilUiState()
+
+    private val _uiState = MutableStateFlow(
+        value = PerfilUiState()
     )
-        private set
+    val uiState: StateFlow<PerfilUiState> = _uiState.asStateFlow()
 
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
     init {
-        cargarDatosUsuario()
+        cargarDatos()
     }
 
-    private fun cargarDatosUsuario() {
-        val uid = auth.currentUser?.uid ?: return
-        val correo = auth.currentUser?.email ?: ""
-        
-        uiState = uiState.copy(
-            estaCargando = true,
-            correo = correo
-        )
+    private fun cargarDatos() {
+        val user = auth.currentUser ?: return
+        val email = user.email ?: ""
+        val uid = user.uid
+
+        _uiState.update { 
+            it.copy(
+                correo = email, 
+                isLoading = true 
+            ) 
+        }
 
         firestore.collection(
             "usuarios"
         ).document(
             uid
-        ).get().addOnSuccessListener { documento ->
-            if (documento != null && documento.exists()) {
-                val nombre = documento.getString("nombre") ?: ""
-                uiState = uiState.copy(
-                    nombre = nombre,
-                    estaCargando = false
-                )
+        ).get().addOnSuccessListener { doc ->
+            if (doc.exists()) {
+                _uiState.update {
+                    it.copy(
+                        nombre = doc.getString("nombre") ?: "",
+                        isLoading = false
+                    )
+                }
+            } else {
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false 
+                    ) 
+                }
             }
         }.addOnFailureListener { e ->
-            uiState = uiState.copy(
-                mensajeError = "Error al cargar datos: ${e.message}",
-                estaCargando = false
-            )
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    mensajeEstado = "Error al cargar: ${e.message}",
+                    esError = true
+                )
+            }
         }
     }
 
-    fun actualizarNombre(
+    fun actualizarPerfil(
         nuevoNombre: String
     ) {
-        uiState = uiState.copy(
-            nombre = nuevoNombre
-        )
-    }
-
-    fun guardarCambios() {
-        val uid = auth.currentUser?.uid ?: return
-        val nombre = uiState.nombre.trim()
-
-        if (nombre.isEmpty()) {
-            uiState = uiState.copy(
-                mensajeError = "El nombre no puede estar vacío"
-            )
+        if (nuevoNombre.isBlank()) {
+            _uiState.update {
+                it.copy(
+                    mensajeEstado = "El nombre no puede estar vacío",
+                    esError = true
+                )
+            }
             return
         }
 
-        uiState = uiState.copy(
-            estaCargando = true,
-            mensajeExito = null,
-            mensajeError = null
-        )
+        val uid = auth.currentUser?.uid ?: return
+        _uiState.update { 
+            it.copy(
+                isLoading = true 
+            ) 
+        }
 
         firestore.collection(
             "usuarios"
@@ -88,24 +102,106 @@ class PerfilViewModel : ViewModel() {
             uid
         ).update(
             "nombre", 
-            nombre
+            nuevoNombre
         ).addOnSuccessListener {
-            uiState = uiState.copy(
-                estaCargando = false,
-                mensajeExito = "Perfil actualizado correctamente"
-            )
+            _uiState.update {
+                it.copy(
+                    nombre = nuevoNombre,
+                    isLoading = false,
+                    mensajeEstado = "Perfil actualizado con éxito",
+                    esError = false
+                )
+            }
         }.addOnFailureListener { e ->
-            uiState = uiState.copy(
-                estaCargando = false,
-                mensajeError = "No se pudo actualizar: ${e.message}"
-            )
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    mensajeEstado = "Error al actualizar: ${e.message}",
+                    esError = true
+                )
+            }
         }
     }
 
-    fun limpiarMensajes() {
-        uiState = uiState.copy(
-            mensajeExito = null,
-            mensajeError = null
+    fun cambiarContrasena(
+        actual: String,
+        nueva: String
+    ) {
+        val user = auth.currentUser ?: return
+        val email = user.email ?: return
+
+        _uiState.update { 
+            it.copy(
+                isLoading = true,
+                errorContrasenaActual = null,
+                cambioExitoso = false
+            ) 
+        }
+
+        val credential = EmailAuthProvider.getCredential(
+            email, 
+            actual
         )
+
+        user.reauthenticate(
+            credential
+        ).addOnSuccessListener {
+            user.updatePassword(
+                nueva
+            ).addOnSuccessListener {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        mensajeEstado = "Contraseña cambiada con éxito",
+                        esError = false,
+                        cambioExitoso = true
+                    )
+                }
+            }.addOnFailureListener { e ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        mensajeEstado = "Error al cambiar contraseña: ${e.message}",
+                        esError = true
+                    )
+                }
+            }
+        }.addOnFailureListener { e ->
+            val mensajeError = if (e is FirebaseAuthInvalidCredentialsException) {
+                "La contraseña actual es incorrecta"
+            } else {
+                "Error de autenticación: ${e.message}"
+            }
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    errorContrasenaActual = mensajeError
+                )
+            }
+        }
+    }
+
+    fun limpiarErrorContrasenaActual() {
+        _uiState.update { 
+            it.copy(
+                errorContrasenaActual = null 
+            ) 
+        }
+    }
+
+    fun cerrarSesion(
+        onSesionCerrada: () -> Unit
+    ) {
+        auth.signOut()
+        onSesionCerrada()
+    }
+
+    fun limpiarMensaje() {
+        _uiState.update { 
+            it.copy(
+                mensajeEstado = null,
+                cambioExitoso = false
+            ) 
+        }
     }
 }

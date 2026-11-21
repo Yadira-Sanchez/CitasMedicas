@@ -451,12 +451,13 @@ fun NavegacionApp(
                     }
                 },
                 alCerrarSesion = {
-                    auth.signOut()
                     navController.navigate(Destinos.LOGIN) {
-                        popUpTo(Destinos.INICIO) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
         }
+        
+
     }
 }
